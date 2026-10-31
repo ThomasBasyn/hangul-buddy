@@ -192,3 +192,14 @@ dialog input { width: 100%; padding: 8px 10px; margin: 8px 0 12px; border-radius
   margin-left: auto; flex: none; border: 0; background: none; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 6px;
 }
 .lesson li .mini:hover { background: var(--line); }
+
+/* instellingen */
+.settings { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.settings h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+.settings h3 { margin: 1rem 0 .25rem; font-size: 1rem; }
+.settings label { display: block; margin: .6rem 0; font-size: .9rem; }
+.settings input { display: block; width: 100%; margin-top: .25rem; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+.settings hr { border: 0; border-top: 1px solid var(--line); margin: 1.2rem 0; }
+.settings .muted { color: var(--muted); font-size: .9rem; margin: .25rem 0; }
+.settings .auto-msg { margin-top: .75rem; }
+.auto-msg.bad { color: var(--again); }

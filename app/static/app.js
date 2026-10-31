@@ -500,8 +500,67 @@
     });
     $("view-practice").hidden = view !== "practice";
     $("view-lessons").hidden = view !== "lessons";
+    $("view-settings").hidden = view !== "settings";
     if (view === "lessons") renderLessons();
+    if (view === "settings") loadSettings();
   }
+
+  // ------------------------------------------------------------ instellingen
+  function setMsg(text, bad) {
+    const m = $("set-msg");
+    m.textContent = text || "";
+    m.hidden = !text;
+    m.classList.toggle("bad", !!bad);
+  }
+
+  function showSettings(s) {
+    $("set-user").textContent = s.name ? `Hoi ${s.name}` : "Instellingen";
+    const src = { own: "Je gebruikt je eigen sleutel", shared: "Je gebruikt de sleutel van de eigenaar" }[s.azure_source];
+    $("set-status").textContent = src || "Er is geen Azure-sleutel: luisteren en uitspraak beoordelen werken niet.";
+    if (s.azure_region) $("set-region").value = s.azure_region;
+    $("set-remove").hidden = s.azure_source !== "own";
+    $("set-save").disabled = !s.can_store_key;
+    if (!s.can_store_key) setMsg("Eigen sleutels opslaan staat uit op deze server (KEY_SECRET ontbreekt).", true);
+  }
+
+  async function loadSettings() {
+    setMsg("");
+    $("set-logout").hidden = !store.get("hb_token");
+    try { showSettings(await getJSON("/api/settings")); } catch { setMsg("Instellingen laden mislukt.", true); }
+  }
+
+  async function refreshConfig() {
+    try { state.config = await getJSON("/api/config"); } catch { /* blijft zoals het was */ }
+  }
+
+  $("set-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = $("set-save");
+    btn.disabled = true;
+    setMsg("Sleutel controleren…");
+    try {
+      const res = await api("/api/settings/azure", { method: "PUT", json: { key: $("set-key").value.trim(), region: $("set-region").value.trim() } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setMsg(data.detail || "Opslaan mislukt.", true); return; }
+      $("set-key").value = "";
+      showSettings(data);
+      await refreshConfig();
+      setMsg("Opgeslagen. Vanaf nu gebruik je je eigen sleutel.");
+    } finally { btn.disabled = false; }
+  };
+
+  $("set-remove").onclick = async () => {
+    const res = await api("/api/settings/azure", { method: "DELETE" });
+    if (!res.ok) { setMsg("Verwijderen mislukt.", true); return; }
+    showSettings(await res.json());
+    await refreshConfig();
+    setMsg("Eigen sleutel verwijderd.");
+  };
+
+  $("set-logout").onclick = () => {
+    try { localStorage.removeItem("hb_token"); } catch { /* niets */ }
+    location.reload();
+  };
 
   function press(id) {
     const b = $(id);

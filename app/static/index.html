@@ -14,6 +14,7 @@
   <nav class="tabs" role="tablist">
     <button role="tab" class="tab active" data-view="practice" aria-selected="true">Oefenen</button>
     <button role="tab" class="tab" data-view="lessons" aria-selected="false">Lessen</button>
+    <button role="tab" class="tab" data-view="settings" aria-selected="false">Instellingen</button>
   </nav>
 </header>
 
@@ -99,12 +100,37 @@
   <section id="view-lessons" class="view" hidden>
     <div id="lessons"></div>
   </section>
+
+  <!-- ============ INSTELLINGEN ============ -->
+  <section id="view-settings" class="view" hidden>
+    <div class="card settings">
+      <h2 id="set-user">Instellingen</h2>
+      <h3>Azure Speech-sleutel</h3>
+      <p id="set-status" class="muted"></p>
+      <p class="muted">Met je eigen gratis Azure-sleutel heb je je eigen maandelijkse spreektijd. Zonder eigen sleutel gebruik je die van de eigenaar.</p>
+      <form id="set-form" autocomplete="off">
+        <label>Sleutel
+          <input type="password" id="set-key" autocomplete="off" spellcheck="false" placeholder="Plak hier je Azure-sleutel">
+        </label>
+        <label>Regio
+          <input type="text" id="set-region" autocapitalize="none" spellcheck="false" placeholder="bv. swedencentral of westeurope">
+        </label>
+        <div class="practice-row">
+          <button class="primary" type="submit" id="set-save">Controleren en opslaan</button>
+          <button class="ghost" type="button" id="set-remove" hidden>Eigen sleutel verwijderen</button>
+        </div>
+      </form>
+      <p id="set-msg" class="auto-msg" hidden></p>
+      <hr>
+      <button class="ghost" id="set-logout" hidden>Uitloggen op dit toestel</button>
+    </div>
+  </section>
 </main>
 
 <dialog id="token-dialog">
   <form method="dialog" id="token-form">
     <h3>Toegangscode</h3>
-    <p>Deze server is beveiligd. Vul de APP_TOKEN in.</p>
+    <p>Deze server is beveiligd. Vul je persoonlijke toegangscode in.</p>
     <input type="password" id="token-input" autocomplete="current-password" required>
     <button class="primary" type="submit">Opslaan</button>
   </form>
