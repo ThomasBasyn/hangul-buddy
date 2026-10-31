@@ -197,3 +197,8 @@ def test_azure_assess_uses_separate_transcript(monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(failing)))
     result = asyncio.run(azure_speech.assess(b"wav", "안녕히 계세요"))
     assert result["heard"] == ""  # liever niets dan de referentietekst als "gehoord"
+
+
+def test_config_has_auto_grading_thresholds(client):
+    cfg = client.get("/api/config").json()
+    assert cfg["auto"] == {"easy": 90.0, "retry": 80.0}

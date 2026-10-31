@@ -32,6 +32,8 @@ DB_PATH = DATA_DIR / "hangul.db"
 TTS_CACHE = DATA_DIR / "tts"
 LESSONS_FILE = Path(os.getenv("LESSONS_FILE", BASE / "content" / "lessons.json"))
 NEW_PER_DAY = int(os.getenv("NEW_PER_DAY", "5"))
+AUTO_EASY = float(os.getenv("AUTO_EASY", "90"))    # automatisch beoordelen: vanaf hier Makkelijk
+AUTO_RETRY = float(os.getenv("AUTO_RETRY", "80"))  # onder deze score: Moeilijk en opnieuw
 APP_TOKEN = os.getenv("APP_TOKEN", "")
 TZ = ZoneInfo(os.getenv("TZ_NAME", "Europe/Brussels"))
 MAX_WAV_BYTES = 2_000_000  # ±60 s audio op 16 kHz
@@ -166,6 +168,7 @@ def config():
     return {
         "azure": azure_speech.enabled(),
         "new_per_day": NEW_PER_DAY,
+        "auto": {"easy": AUTO_EASY, "retry": AUTO_RETRY},
         "course": COURSE.get("course", ""),
         "lessons": len(LESSONS),
         "items": len(ITEMS),

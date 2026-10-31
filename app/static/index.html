@@ -27,6 +27,12 @@
       <span id="st-learned" title="Geleerde woorden">📚 0/0</span>
     </div>
 
+    <label class="auto-switch">
+      <input type="checkbox" id="auto-switch" role="switch">
+      <span class="track" aria-hidden="true"></span>
+      <span class="auto-text"><strong>Automatisch beoordelen</strong><small id="auto-help"></small></span>
+    </label>
+
     <!-- Het 'toestel': scherm + drie knoppen, zoals de ESP32-versie -->
     <div class="device">
       <div class="screen" id="screen">
@@ -62,6 +68,14 @@
         <button class="grade g-hard" data-grade="3">Moeilijk<small>2</small></button>
         <button class="grade g-good" data-grade="4">Goed<small>3</small></button>
         <button class="grade g-easy" data-grade="5">Makkelijk<small>4</small></button>
+      </div>
+    </div>
+
+    <div class="practice-bar" id="practice-bar" hidden>
+      <p class="grades-q" id="practice-progress"></p>
+      <div class="practice-row">
+        <button class="primary" id="pr-next">Volgend woord</button>
+        <button class="ghost" id="pr-stop">Stoppen</button>
       </div>
     </div>
 

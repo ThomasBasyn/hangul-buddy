@@ -3,13 +3,27 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const state = { config: null, card: null, revealed: false, assessed: null, busy: false, recording: null };
+  const state = { config: null, card: null, revealed: false, assessed: null, busy: false, recording: null, practice: null, lessons: [] };
   const GRADE_BUTTON = { 1: 1, 2: 1, 3: 3, 4: 4, 5: 5 }; // voorgestelde grade -> knop
 
   // ------------------------------------------------------------ helpers
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch { /* privémodus */ } },
+  };
+
+  // Automatisch beoordelen: drempels komen uit /api/config, dit zijn de standaardwaarden
+  const thresholds = () => state.config?.auto || { easy: 90, retry: 80 };
+  const autoOn = () => store.get("hb_auto") === "1";
+  const manualGrading = () => !state.practice && !autoOn();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const shuffle = (a) => {
+    const out = [...a];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
   };
 
   function toast(msg, ms = 3200) {
@@ -72,18 +86,7 @@
     state.card = data;
     $("done").hidden = true;
     $("screen").parentElement.hidden = false;
-    const kind = { new: "Nieuw", review: "Herhaling", relearn: "Opnieuw" }[data.kind];
-    const badge = $("kind-badge");
-    badge.textContent = kind;
-    badge.className = `badge ${data.kind}`;
-    $("lesson-name").textContent = `Les ${data.lesson.id} · ${data.lesson.title}`;
-    const word = $("word");
-    word.textContent = data.item.ko;
-    word.classList.toggle("long", data.item.ko.length > 6);
-    $("rom").textContent = data.item.rom;
-    $("nl").textContent = data.item.nl;
-    $("tip").textContent = data.item.tip ? `💡 ${data.item.tip}` : "";
-    $("tip").hidden = !data.item.tip;
+    fillCard(data.item, data.lesson, { new: "Nieuw", review: "Herhaling", relearn: "Opnieuw" }[data.kind], data.kind);
 
     if (data.show_note && data.lesson.note) {
       $("note-title").textContent = `Les ${data.lesson.id}: ${data.lesson.title}`;
@@ -94,6 +97,20 @@
     if (data.kind === "new" && state.interacted) listen();
   }
 
+  function fillCard(item, lesson, badgeText, badgeClass) {
+    const badge = $("kind-badge");
+    badge.textContent = badgeText;
+    badge.className = `badge ${badgeClass}`;
+    $("lesson-name").textContent = `Les ${lesson.id} · ${lesson.title}`;
+    const word = $("word");
+    word.textContent = item.ko;
+    word.classList.toggle("long", item.ko.length > 6);
+    $("rom").textContent = item.rom;
+    $("nl").textContent = item.nl;
+    $("tip").textContent = item.tip ? `💡 ${item.tip}` : "";
+    $("tip").hidden = !item.tip;
+  }
+
   function resetCard() {
     state.card = null;
     state.revealed = false;
@@ -102,6 +119,7 @@
     $("feedback").hidden = true;
     $("feedback").innerHTML = "";
     $("grades").hidden = true;
+    $("practice-bar").hidden = true;
     $("note-card").hidden = true;
     document.querySelectorAll(".grade").forEach((b) => b.classList.remove("suggested"));
   }
@@ -123,18 +141,18 @@
     if (!state.card) return;
     state.revealed = true;
     $("reveal").hidden = false;
-    $("grades").hidden = false;
+    $("grades").hidden = !manualGrading();
   }
 
   // ------------------------------------------------------------ luisteren
   let audio;
-  async function listen() {
-    if (!state.card) return;
+  async function listen(item = state.card?.item) {
+    if (!item) return;
     press("btn-listen");
-    const text = state.card.item.ko;
+    const text = item.ko;
     if (state.config?.azure) {
       try {
-        const res = await api(`/api/tts/${encodeURIComponent(state.card.item.id)}`);
+        const res = await api(`/api/tts/${encodeURIComponent(item.id)}`);
         if (res.ok) {
           const url = URL.createObjectURL(await res.blob());
           audio?.pause();
@@ -236,6 +254,8 @@
   }
 
   async function sendAssessment(request) {
+    const card = state.card;
+    let result = null;
     state.busy = true;
     $("feedback").hidden = false;
     $("feedback").innerHTML = '<div class="heard">Beoordelen…</div>';
@@ -245,9 +265,51 @@
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || res.status);
       }
-      showAssessment(await res.json());
+      result = await res.json();
+      showAssessment(result);
     } catch (e) {
       $("feedback").innerHTML = `<div class="heard">Beoordelen mislukt: ${esc(e.message)}</div>`;
+    } finally {
+      state.busy = false;
+    }
+    if (result) await autoJudge(card, result);
+  }
+
+  // Automatisch beoordelen (alleen bij gewone herhalingen, niet bij vrij oefenen):
+  //  >= easy  : Makkelijk, volgend woord (heb je eerder al Moeilijk gekregen: gewoon door)
+  //  >= retry : niets opgeslagen, opnieuw proberen
+  //  <  retry : meteen Moeilijk opgeslagen, blijven tot je easy haalt
+  async function autoJudge(card, r) {
+    if (state.practice || !autoOn() || !card || state.card !== card) return;
+    const { easy, retry } = thresholds();
+    const say = (text, cls) => $("feedback").insertAdjacentHTML("beforeend", `<div class="auto-msg ${cls}">${text}</div>`);
+    state.busy = true;
+    try {
+      if (r.score >= easy) {
+        if (card.hardMarked) {
+          say("✅ Gelukt! Volgend woord…", "ok");
+        } else {
+          await saveGrade(5, r);
+          say("✅ Makkelijk! Volgend woord…", "ok");
+        }
+        await sleep(1600);
+        state.busy = false;
+        await loadNext();
+        return;
+      }
+      if (r.score >= retry) {
+        say(`Bijna! Je hebt ${easy}% nodig. Probeer opnieuw.`, "mid");
+        return;
+      }
+      if (!card.hardMarked) {
+        await saveGrade(3, r);
+        card.hardMarked = true;
+        say(`Gemarkeerd als Moeilijk. Probeer opnieuw tot je ${easy}% haalt.`, "bad");
+      } else {
+        say(`Probeer opnieuw tot je ${easy}% haalt.`, "bad");
+      }
+    } catch (e) {
+      toast(`Opslaan mislukt (${e.message}).`);
     } finally {
       state.busy = false;
     }
@@ -270,18 +332,22 @@
   }
 
   // ------------------------------------------------------------ beoordelen
+  async function saveGrade(g, assessed) {
+    const body = { item_id: state.card.item.id, grade: g };
+    if (assessed) {
+      body.score = Math.max(0, Math.min(100, assessed.score));
+      body.source = assessed.provider;
+    }
+    const res = await api("/api/grade", { method: "POST", json: body });
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  }
+
   async function grade(g) {
     if (!state.card || state.busy) return;
     state.busy = true;
     try {
-      const body = { item_id: state.card.item.id, grade: g };
-      if (state.assessed) {
-        body.score = Math.max(0, Math.min(100, state.assessed.score));
-        body.source = state.assessed.provider;
-      }
-      const res = await api("/api/grade", { method: "POST", json: body });
-      if (!res.ok) throw new Error(res.status);
-      const r = await res.json();
+      const r = await saveGrade(g, state.assessed);
       if (g >= 3) toast(r.interval === 1 ? "Morgen zie je dit woord terug." : `Terug over ${r.interval} dagen.`, 1800);
       await loadNext();
     } catch (e) {
@@ -341,17 +407,76 @@
 
   async function renderLessons() {
     const list = await getJSON("/api/lessons");
+    state.lessons = list;
     $("lessons").innerHTML = list.map((l) => {
       const pct = Math.round((l.learned / l.total) * 100);
+      const seen = l.items.filter((it) => it.seen).length;
       const items = l.unlocked
-        ? `<ul>${l.items.map((it) => `<li class="${it.seen ? "" : "unseen"}"><span class="ko" lang="ko">${esc(it.ko)}</span><span class="tr" title="${esc(it.nl)}">${esc(it.nl)}</span></li>`).join("")}</ul>`
+        ? `<ul>${l.items.map((it) => `<li class="${it.seen ? "" : "unseen"}"><span class="ko" lang="ko">${esc(it.ko)}</span><span class="tr" title="${esc(it.nl)}">${esc(it.nl)}</span><button class="mini" data-listen="${esc(it.id)}" aria-label="Luister naar ${esc(it.ko)}">🔊</button></li>`).join("")}</ul>`
+        : "";
+      const actions = l.unlocked
+        ? `<div class="lesson-actions"><button class="primary sm" data-practice="${l.id}" ${seen ? "" : "disabled"}>🎙️ Oefenen${seen ? ` (${seen} woorden)` : ""}</button>${seen ? "" : "<small>Je hebt hier nog geen woorden gezien.</small>"}</div>`
         : "";
       return `<article class="lesson ${l.unlocked ? "" : "locked"}">
         <div class="lesson-head"><h3>${l.unlocked ? "" : "🔒 "}Les ${l.id}: ${esc(l.title)}${l.current ? " · bezig" : ""}</h3><span>${l.learned}/${l.total}</span></div>
         <div class="bar"><div style="width:${pct}%"></div></div>
-        ${l.unlocked ? `<p>${esc(l.note)}</p>${items}` : ""}
+        ${l.unlocked ? `<p>${esc(l.note)}</p>${actions}${items}` : ""}
       </article>`;
     }).join("");
+  }
+
+  // ------------------------------------------------------------ vrij oefenen per les
+  // Telt niet mee voor je herhalingsschema: je krijgt alleen een score.
+  function startPractice(lessonId) {
+    const les = state.lessons.find((l) => l.id === lessonId);
+    const items = les ? shuffle(les.items.filter((it) => it.seen)) : [];
+    if (!items.length) return toast("Je hebt nog geen woorden uit deze les gezien.");
+    state.practice = { lesson: les, items, idx: 0 };
+    switchView("practice");
+    showPracticeCard();
+  }
+
+  function showPracticeCard() {
+    const p = state.practice;
+    resetCard();
+    $("done").hidden = true;
+    $("screen").parentElement.hidden = false;
+    const item = p.items[p.idx];
+    state.card = { kind: "practice", item, lesson: p.lesson, counts: {} };
+    fillCard(item, p.lesson, "Oefenen", "practice");
+    $("practice-progress").textContent = `Woord ${p.idx + 1} van ${p.items.length} · telt niet mee voor je herhalingen`;
+    $("practice-bar").hidden = false;
+    reveal();
+    if (state.interacted) listen();
+  }
+
+  function nextPractice() {
+    const p = state.practice;
+    if (!p || state.busy) return;
+    if (p.idx + 1 >= p.items.length) {
+      toast("Klaar! Je hebt alle woorden van deze les geoefend.");
+      return stopPractice();
+    }
+    p.idx++;
+    showPracticeCard();
+  }
+
+  function stopPractice() {
+    state.practice = null;
+    resetCard();
+    switchView("lessons");
+    loadNext();
+  }
+
+  function initAuto() {
+    const { easy, retry } = thresholds();
+    const sw = $("auto-switch");
+    sw.checked = autoOn();
+    $("auto-help").textContent = `Vanaf ${easy}% Makkelijk. Onder ${retry}% Moeilijk, en je blijft op het woord tot je ${easy}% haalt.`;
+    sw.onchange = () => {
+      store.set("hb_auto", sw.checked ? "1" : "0");
+      if (state.card && state.revealed) $("grades").hidden = !manualGrading();
+    };
   }
 
   function switchView(view) {
@@ -372,11 +497,23 @@
   }
 
   // ------------------------------------------------------------ events
-  $("btn-listen").onclick = listen;
+  $("btn-listen").onclick = () => listen();
   $("btn-speak").onclick = speak;
   $("btn-reveal").onclick = () => { press("btn-reveal"); reveal(); };
   $("note-close").onclick = () => { $("note-card").hidden = true; };
   $("btn-extra").onclick = () => loadNext(true);
+  $("pr-next").onclick = nextPractice;
+  $("pr-stop").onclick = stopPractice;
+  $("lessons").addEventListener("click", (e) => {
+    const l = e.target.closest("[data-listen]");
+    if (l) {
+      const it = state.lessons.flatMap((x) => x.items).find((x) => x.id === l.dataset.listen);
+      if (it) listen(it);
+      return;
+    }
+    const p = e.target.closest("[data-practice]");
+    if (p && !p.disabled) startPractice(Number(p.dataset.practice));
+  });
   document.querySelectorAll(".grade").forEach((b) => { b.onclick = () => grade(Number(b.dataset.grade)); });
   document.querySelectorAll(".tab").forEach((t) => { t.onclick = () => switchView(t.dataset.view); });
 
@@ -386,7 +523,7 @@
     if (e.key === " ") { e.preventDefault(); listen(); }
     else if (e.key === "r" || e.key === "R") speak();
     else if (e.key === "Enter") { e.preventDefault(); reveal(); }
-    else if (state.revealed && ["1", "2", "3", "4"].includes(e.key)) grade([1, 3, 4, 5][Number(e.key) - 1]);
+    else if (state.revealed && !$("grades").hidden && ["1", "2", "3", "4"].includes(e.key)) grade([1, 3, 4, 5][Number(e.key) - 1]);
   });
 
   ["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, () => { state.interacted = true; }, { once: true, capture: true }));
@@ -396,6 +533,7 @@
 
   (async () => {
     try { state.config = await getJSON("/api/config"); } catch { state.config = { azure: false }; }
+    initAuto();
     await loadNext();
   })();
 })();
