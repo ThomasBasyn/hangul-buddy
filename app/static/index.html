@@ -14,6 +14,7 @@
   <nav class="tabs" role="tablist">
     <button role="tab" class="tab active" data-view="practice" aria-selected="true">Oefenen</button>
     <button role="tab" class="tab" data-view="lessons" aria-selected="false">Lessen</button>
+    <button role="tab" class="tab" data-view="board" aria-selected="false">Ranglijst</button>
     <button role="tab" class="tab" data-view="settings" aria-selected="false">Instellingen</button>
   </nav>
 </header>
@@ -21,6 +22,11 @@
 <main>
   <!-- ============ OEFENEN ============ -->
   <section id="view-practice" class="view">
+    <div class="xp" aria-live="polite">
+      <span class="xp-level" id="xp-level">Lv 1</span>
+      <div class="xp-track" role="progressbar" aria-label="Voortgang naar volgend level"><i id="xp-fill"></i></div>
+      <span class="xp-text" id="xp-text">0 XP</span>
+    </div>
     <div class="statusbar" aria-live="polite">
       <span id="st-due" title="Herhalingen vandaag">🔁 0</span>
       <span id="st-new" title="Nieuwe woorden over vandaag">✨ 0</span>
@@ -101,6 +107,19 @@
     <div id="lessons"></div>
   </section>
 
+  <!-- ============ RANGLIJST ============ -->
+  <section id="view-board" class="view" hidden>
+    <div class="board">
+      <div class="seg" role="group" aria-label="Periode">
+        <button class="seg-btn active" data-period="week">Deze week</button>
+        <button class="seg-btn" data-period="all">Altijd</button>
+      </div>
+      <p class="muted" id="board-info"></p>
+      <ol id="board-list" class="board-list"></ol>
+      <p class="muted">XP verdien je per woord: Makkelijk 10, Moeilijk 8, nieuw woord +5, uitspraak vanaf 90% +5. Per woord per dag telt alleen je beste poging.</p>
+    </div>
+  </section>
+
   <!-- ============ INSTELLINGEN ============ -->
   <section id="view-settings" class="view" hidden>
     <div class="card settings">
@@ -122,17 +141,39 @@
       </form>
       <p id="set-msg" class="auto-msg" hidden></p>
       <hr>
+      <div id="pw-section" hidden>
+        <h3>Wachtwoord wijzigen</h3>
+        <form id="pw-form" autocomplete="off">
+          <label>Huidig wachtwoord<input type="password" id="pw-old" autocomplete="current-password" required></label>
+          <label>Nieuw wachtwoord (minstens 8 tekens)<input type="password" id="pw-new" autocomplete="new-password" minlength="8" required></label>
+          <button class="primary" type="submit">Wachtwoord wijzigen</button>
+        </form>
+        <p id="pw-msg" class="auto-msg" hidden></p>
+        <hr>
+      </div>
       <button class="ghost" id="set-logout" hidden>Uitloggen op dit toestel</button>
     </div>
   </section>
 </main>
 
-<dialog id="token-dialog">
-  <form method="dialog" id="token-form">
-    <h3>Toegangscode</h3>
-    <p>Deze server is beveiligd. Vul je persoonlijke toegangscode in.</p>
-    <input type="password" id="token-input" autocomplete="current-password" required>
-    <button class="primary" type="submit">Opslaan</button>
+<dialog id="login-dialog">
+  <form id="login-form">
+    <h3>Inloggen</h3>
+    <label>Gebruikersnaam<input id="login-user" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label>Wachtwoord<input type="password" id="login-pass" autocomplete="current-password" required></label>
+    <p class="auto-msg bad" id="login-msg" hidden></p>
+    <button class="primary" type="submit">Inloggen</button>
+    <p><button class="link" type="button" id="to-claim">Ik heb een uitnodigingscode</button></p>
+  </form>
+  <form id="claim-form" hidden>
+    <h3>Account maken</h3>
+    <p class="muted">Vul de code in die je gekregen hebt en kies zelf een gebruikersnaam en wachtwoord.</p>
+    <label>Uitnodigingscode<input id="claim-code" autocomplete="off" autocapitalize="none" spellcheck="false" required></label>
+    <label>Gebruikersnaam<input id="claim-user" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="2" maxlength="20" required></label>
+    <label>Wachtwoord (minstens 8 tekens)<input type="password" id="claim-pass" autocomplete="new-password" minlength="8" required></label>
+    <p class="auto-msg bad" id="claim-msg" hidden></p>
+    <button class="primary" type="submit">Account activeren</button>
+    <p><button class="link" type="button" id="to-login">Ik heb al een account</button></p>
   </form>
 </dialog>
 

@@ -219,8 +219,9 @@ def multi(tmp_path, monkeypatch):
     from fastapi.testclient import TestClient
     with TestClient(main.app) as c:
         c.main = main
-        c.mama_token = main.create_user("Mama")
+        c.invite = main.create_user("Mama")
         c.owner = {"X-App-Token": "baas-code"}
+        c.mama_token = c.post("/api/claim", json={"code": c.invite, "username": "Mama", "password": "mama-wachtwoord"}).json()["token"]
         c.mama = {"X-App-Token": c.mama_token}
         yield c
 
@@ -241,25 +242,103 @@ def test_users_have_separate_progress(multi):
     assert c.get("/api/stats", headers=c.mama).json()["streak"] == 1
 
 
-def test_login_required_and_codes_are_not_stored_in_plain_text(multi):
+def test_login_required_and_secrets_are_not_stored_in_plain_text(multi):
     c = multi
     assert c.get("/api/next").status_code == 401
     assert c.get("/api/next", headers={"X-App-Token": "fout"}).status_code == 401
     with c.main.db() as con:
-        stored = " ".join(str(r["token_hash"]) for r in con.execute("SELECT token_hash FROM users"))
-    assert c.mama_token not in stored and "baas-code" not in stored
-    # nieuwe code maakt de oude ongeldig
-    new = c.main.reset_token("Mama")
+        dump = " ".join(str(v) for r in con.execute("SELECT * FROM users") for v in tuple(r))
+        dump += " ".join(str(r[0]) for r in con.execute("SELECT token_hash FROM sessions"))
+    for secret in (c.invite, c.mama_token, "baas-code", "mama-wachtwoord"):
+        assert secret not in dump
+    assert "scrypt$" in dump
+    # een gebruikte uitnodigingscode werkt niet meer, ook niet als inlogtoken
+    assert c.get("/api/next", headers={"X-App-Token": c.invite}).status_code == 401
+    assert c.post("/api/claim", json={"code": c.invite, "username": "Ander", "password": "ander-wachtwoord"}).status_code == 401
+
+
+def test_login_logout_and_password_change(multi):
+    c = multi
+    assert c.post("/api/login", json={"username": "mama", "password": "fout-wachtwoord"}).status_code == 401
+    assert c.post("/api/login", json={"username": "Niemand", "password": "mama-wachtwoord"}).status_code == 401
+    r = c.post("/api/login", json={"username": "mama", "password": "mama-wachtwoord"})  # hoofdletterongevoelig
+    assert r.status_code == 200 and r.json()["name"] == "Mama"
+    second = {"X-App-Token": r.json()["token"]}
+    assert c.get("/api/next", headers=second).status_code == 200
+    # wachtwoord wijzigen: oud wachtwoord nodig, andere apparaten worden uitgelogd
+    assert c.put("/api/settings/password", json={"old": "nee", "new": "nieuw-wachtwoord"}, headers=second).status_code == 400
+    assert c.put("/api/settings/password", json={"old": "mama-wachtwoord", "new": "kort"}, headers=second).status_code == 400
+    assert c.put("/api/settings/password", json={"old": "mama-wachtwoord", "new": "nieuw-wachtwoord"}, headers=second).status_code == 200
+    assert c.get("/api/next", headers=second).status_code == 200
     assert c.get("/api/next", headers=c.mama).status_code == 401
-    assert c.get("/api/next", headers={"X-App-Token": new}).status_code == 200
+    assert c.post("/api/login", json={"username": "Mama", "password": "mama-wachtwoord"}).status_code == 401
+    assert c.post("/api/login", json={"username": "Mama", "password": "nieuw-wachtwoord"}).status_code == 200
+    c.post("/api/logout", headers=second)
+    assert c.get("/api/next", headers=second).status_code == 401
+
+
+def test_owner_claims_with_app_token_and_keeps_it_for_the_device(multi):
+    c = multi
+    r = c.post("/api/claim", json={"code": "baas-code", "username": "Thomas", "password": "baas-wachtwoord"})
+    assert r.status_code == 200
+    assert c.get("/api/config", headers={"X-App-Token": r.json()["token"]}).json()["user"] == "Thomas"
+    assert c.get("/api/config", headers=c.owner).json()["user"] == "Thomas"  # toestel blijft werken
+    assert c.post("/api/claim", json={"code": "baas-code", "username": "Weer", "password": "baas-wachtwoord"}).status_code == 401
+    assert c.post("/api/login", json={"username": "thomas", "password": "baas-wachtwoord"}).status_code == 200
+
+
+def test_username_rules_and_throttling(multi):
+    c = multi
+    code = c.main.create_user("Ella")
+    good = {"code": code, "password": "ella-wachtwoord"}
+    assert c.post("/api/claim", json=good | {"username": "mama"}).status_code == 409      # bezet (ook andere hoofdletters)
+    assert c.post("/api/claim", json=good | {"username": "x"}).status_code == 400          # te kort
+    assert c.post("/api/claim", json=good | {"username": "Ella", "password": "kort"}).status_code == 400
+    assert c.post("/api/claim", json=good | {"username": "Ella"}).status_code == 200
+    for _ in range(c.main.MAX_FAILS):
+        assert c.post("/api/login", json={"username": "Ella", "password": "fout-fout-fout"}).status_code == 401
+    assert c.post("/api/login", json={"username": "Ella", "password": "ella-wachtwoord"}).status_code == 429
+
+
+def test_reset_password_gives_new_invite(multi):
+    c, main = multi, multi.main
+    new = main.reset_token("Mama")
+    assert c.get("/api/next", headers=c.mama).status_code == 401
+    assert c.post("/api/login", json={"username": "Mama", "password": "mama-wachtwoord"}).status_code == 401
+    assert c.post("/api/claim", json={"code": new, "username": "Mama", "password": "helemaal-nieuw"}).status_code == 200
+    assert main.reset_token("Baas") == ""  # eigenaar: opnieuw activeren met APP_TOKEN
+
+
+def test_xp_levels_and_leaderboard(multi):
+    c, main = multi, multi.main
+    r = c.post("/api/grade", json={"item_id": "1-1", "grade": 5, "score": 95}, headers=c.mama).json()
+    assert r["xp_gained"] == 20 and r["xp"]["total"] == 20 and r["xp"]["level"] == 1   # 10 + nieuw 5 + score 5
+    # zelfde woord nog eens die dag: geen extra XP
+    assert c.post("/api/grade", json={"item_id": "1-1", "grade": 5, "score": 99}, headers=c.mama).json()["xp_gained"] == 0
+    # Moeilijk en later Makkelijk: alleen het verschil telt
+    assert c.post("/api/grade", json={"item_id": "1-2", "grade": 3, "score": 60}, headers=c.mama).json()["xp_gained"] == 13
+    assert c.post("/api/grade", json={"item_id": "1-2", "grade": 5, "score": 95}, headers=c.mama).json()["xp_gained"] == 7
+    assert c.get("/api/stats", headers=c.mama).json()["xp"]["total"] == 40
+    c.post("/api/grade", json={"item_id": "1-1", "grade": 4}, headers=c.owner)
+    lb = c.get("/api/leaderboard", headers=c.owner).json()
+    assert [(x["rank"], x["name"], x["xp"], x["you"]) for x in lb["rows"]] == [(1, "Mama", 40, False), (2, "Baas", 15, True)]
+    assert c.get("/api/leaderboard?period=all", headers=c.owner).json()["rows"][0]["name"] == "Mama"
+    assert c.get("/api/leaderboard?period=maand", headers=c.owner).status_code == 400
+    assert c.get("/api/leaderboard").status_code == 401
+    # levelgrenzen: 100, 300, 600 XP
+    assert [main.level_for(x) for x in (0, 99, 100, 299, 300, 599, 600)] == [1, 1, 2, 2, 3, 3, 4]
+    # een oud weekresultaat telt niet mee in de weekranglijst
+    with main.db() as con:
+        con.execute("INSERT INTO xp_log (user_id, ts, day, amount, reason) VALUES (2,'x','2020-01-01',500,'test')")
+    wk = {x["name"]: x["xp"] for x in c.get("/api/leaderboard", headers=c.owner).json()["rows"]}
+    al = {x["name"]: x["xp"] for x in c.get("/api/leaderboard?period=all", headers=c.owner).json()["rows"]}
+    assert wk["Mama"] == 40 and al["Mama"] == 540
 
 
 def test_user_management_rules(multi):
     main = multi.main
     with pytest.raises(ValueError):
         main.create_user("Mama")
-    with pytest.raises(ValueError):
-        main.reset_token("Baas")
     with pytest.raises(ValueError):
         main.remove_user("Baas")
     multi.post("/api/grade", json={"item_id": "1-1", "grade": 5}, headers=multi.mama)
@@ -385,8 +464,11 @@ def test_old_single_user_database_is_migrated(tmp_path, monkeypatch):
             assert con.execute("SELECT COUNT(*) FROM review_log WHERE user_id=1").fetchone()[0] == 1
             assert not con.execute("SELECT name FROM sqlite_master WHERE name='progress_old'").fetchone()
         # nog een gebruiker kan nu dezelfde woorden leren zonder conflict
-        token = main.create_user("Mama")
-        assert c.post("/api/grade", json={"item_id": "1-1", "grade": 4}, headers={"X-App-Token": token}).status_code == 200
+        invite = main.create_user("Mama")
+        session = c.post("/api/claim", json={"code": invite, "username": "Mama", "password": "mama-wachtwoord"}).json()["token"]
+        assert c.post("/api/grade", json={"item_id": "1-1", "grade": 4}, headers={"X-App-Token": session}).status_code == 200
+        # de oude geschiedenis (1-1 met grade 5) levert eenmalig XP op
+        assert c.get("/api/stats", headers=h).json()["xp"]["total"] == 10
     assert (tmp_path / "hangul.db.bak-voor-gebruikers").exists()  # reservekopie
     # opnieuw opstarten migreert niet nog eens en verliest niets
     for mod in ("main", "azure_speech"):

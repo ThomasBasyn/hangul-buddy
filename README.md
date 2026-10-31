@@ -19,7 +19,8 @@ The web app and the future device talk to the **same API**, so the hardware only
 - **Text-to-speech** with Azure neural voices (cached on disk, MP3 for the web, 16 kHz WAV for the ESP32), falling back to the browser's voice.
 - **Auto-grading switch**: with a score of 90% or more the word counts as *Easy* and you move on; between 80% and 90% nothing is saved and you try again; below 80% it is marked *Hard* straight away and you stay on the word until you reach 90%. Thresholds are in `/api/config`.
 - **Lesson word lists and practice**: every unlocked lesson lists its words with a play button, and a *Practice* mode lets you drill the words you have already seen (it does not affect your review schedule, and with auto-grading on it moves to the next word at 90%).
-- **Multiple users**: every user has their own login code and progress. Users can store their own Azure Speech key in the *Instellingen* tab (checked, then stored encrypted); without one they fall back to the owner's key from `.env`.
+- **XP, levels and leaderboard**: every review earns XP (Easy 10, Hard 8, new word +5, pronunciation of 90% or more +5; per word per day only your best attempt counts). Levels need 100, 300, 600 … XP. A weekly (Monday to Sunday) and an all-time leaderboard show everyone's XP, level and streak.
+- **Multiple users**: every user has a username and password and their own progress. Users can store their own Azure Speech key in the *Instellingen* tab (checked, then stored encrypted); without one they fall back to the owner's key from `.env`.
 - Streaks, daily limits, lesson overview, keyboard shortcuts, dark mode.
 
 ## Architecture
@@ -55,16 +56,18 @@ pytest ../tests
 
 ## Users
 
-The first user is the owner and logs in with `APP_TOKEN` (name: `OWNER_NAME`). Add others with the CLI; the code is shown once:
+The first user is the owner. Everyone else gets an invitation code from the owner and picks their own username and password in the app:
 
 ```bash
-docker compose exec hangul-buddy python manage.py add-user Mama
+docker compose exec hangul-buddy python manage.py add-user Mama        # prints a one-time invitation code
 docker compose exec hangul-buddy python manage.py list
-docker compose exec hangul-buddy python manage.py reset-token Mama
-docker compose exec hangul-buddy python manage.py remove-user Mama   # also deletes their progress
+docker compose exec hangul-buddy python manage.py reset-password Mama  # forgot password: wipes it, prints a new code
+docker compose exec hangul-buddy python manage.py remove-user Mama     # also deletes their progress
 ```
 
-Codes are stored hashed. Personal Azure keys are encrypted with `KEY_SECRET` (default `APP_TOKEN`) and are never sent back to the browser. Without `APP_TOKEN` the app runs in open single-user mode. An existing single-user database is migrated automatically (a backup `hangul.db.bak-voor-gebruikers` is made first).
+The owner activates the account the same way, using `APP_TOKEN` as the code. `APP_TOKEN` keeps working as a header for the ESP32 device.
+
+Security: passwords are hashed with scrypt, session tokens and invitation codes are stored as SHA-256 hashes, sessions last 90 days, and repeated failed logins are throttled. Everything lives in the SQLite database in the Docker volume (`/data`, ignored by git together with `.env`). Personal Azure keys are encrypted with `KEY_SECRET` (default `APP_TOKEN`) and are never sent back to the browser. Without `APP_TOKEN` the app runs in open single-user mode. An existing database is migrated automatically (a backup `hangul.db.bak-voor-gebruikers` is made first) and existing history is turned into XP once.
 
 ## API (also used by the device)
 
@@ -76,10 +79,13 @@ Codes are stored hashed. Personal Azure keys are encrypted with `KEY_SECRET` (de
 | POST | `/api/assess/{item_id}` | Body: raw WAV (16 kHz, mono, 16-bit) → overall score, per-word scores, suggested grade |
 | POST | `/api/assess-text/{item_id}` | `{"heard": "..."}` → similarity score (fallback) |
 | GET | `/api/lessons`, `/api/stats`, `/api/config` | Overview and settings |
+| POST | `/api/login`, `/api/claim`, `/api/logout` | `{username, password}` → session token; `{code, username, password}` activates an account; end session |
+| GET | `/api/leaderboard?period=week\|all` | Ranking with XP, level and streak |
 | GET | `/api/settings` | Own user, key source (`own`/`shared`) |
+| PUT | `/api/settings/password` | `{old, new}` change password (logs out other devices) |
 | PUT/DELETE | `/api/settings/azure` | `{"key": "...", "region": "..."}` check and store / remove own Azure key |
 
-If `APP_TOKEN` is set, send your personal code as the `X-App-Token` header. Interactive docs: `/api/docs`.
+If `APP_TOKEN` is set, send the session token from `/api/login` (or the owner's `APP_TOKEN`) as the `X-App-Token` header. Interactive docs: `/api/docs`.
 
 ## Adding lessons
 

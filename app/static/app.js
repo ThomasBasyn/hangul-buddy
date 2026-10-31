@@ -50,15 +50,42 @@
     return res;
   }
 
+  // Inloggen: één dialoog, ook als meerdere calls tegelijk een 401 krijgen
+  let loginPromise = null;
   function askToken() {
-    return new Promise((resolve) => {
-      const dlg = $("token-dialog");
-      $("token-form").onsubmit = () => {
-        store.set("hb_token", $("token-input").value.trim());
+    if (loginPromise) return loginPromise;
+    loginPromise = new Promise((resolve) => {
+      const dlg = $("login-dialog");
+      const show = (claim) => {
+        $("login-form").hidden = claim;
+        $("claim-form").hidden = !claim;
+        $(claim ? "claim-code" : "login-user").focus();
+      };
+      const submit = (path, body, msgId) => async (e) => {
+        e.preventDefault();
+        const msg = $(msgId);
+        msg.hidden = true;
+        let res, data = {};
+        try {
+          res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body()) });
+          data = await res.json().catch(() => ({}));
+        } catch { msg.textContent = "Server niet bereikbaar."; msg.hidden = false; return; }
+        if (!res.ok) { msg.textContent = typeof data.detail === "string" ? data.detail : "Dat lukt niet, controleer je gegevens."; msg.hidden = false; return; }
+        store.set("hb_token", data.token);
+        $("login-pass").value = $("claim-pass").value = "";
+        dlg.close();
+        loginPromise = null;
         resolve();
       };
+      $("login-form").onsubmit = submit("/api/login", () => ({ username: $("login-user").value, password: $("login-pass").value }), "login-msg");
+      $("claim-form").onsubmit = submit("/api/claim", () => ({ code: $("claim-code").value, username: $("claim-user").value, password: $("claim-pass").value }), "claim-msg");
+      $("to-claim").onclick = () => show(true);
+      $("to-login").onclick = () => show(false);
+      dlg.oncancel = (e) => e.preventDefault(); // Esc sluit het inlogscherm niet
       dlg.showModal();
+      show(false);
     });
+    return loginPromise;
   }
 
   async function getJSON(path) {
@@ -353,7 +380,23 @@
     }
     const res = await api("/api/grade", { method: "POST", json: body });
     if (!res.ok) throw new Error(res.status);
-    return res.json();
+    const r = await res.json();
+    if (r.xp) showXp(r.xp);
+    if (r.xp_gained) { xpToast(r); }
+    return r;
+  }
+
+  // ------------------------------------------------------------ xp
+  function showXp(x) {
+    $("xp-level").textContent = `Lv ${x.level}`;
+    $("xp-fill").style.width = `${Math.min(100, Math.round((x.into_level / x.level_size) * 100))}%`;
+    $("xp-text").textContent = `${x.total} XP`;
+  }
+
+  function xpToast(r) {
+    toast(`+${r.xp_gained} XP${r.xp.today === r.xp_gained ? "" : ` · vandaag ${r.xp.today}`}`, 1400);
+    const t = $("xp-text");
+    t.classList.remove("pop"); void t.offsetWidth; t.classList.add("pop");
   }
 
   async function grade(g) {
@@ -361,7 +404,10 @@
     state.busy = true;
     try {
       const r = await saveGrade(g, state.assessed);
-      if (g >= 3) toast(r.interval === 1 ? "Morgen zie je dit woord terug." : `Terug over ${r.interval} dagen.`, 1800);
+      if (g >= 3) {
+        const when = r.interval === 1 ? "Morgen zie je dit woord terug." : `Terug over ${r.interval} dagen.`;
+        toast(r.xp_gained ? `+${r.xp_gained} XP · ${when}` : when, 1800);
+      }
       await loadNext();
     } catch (e) {
       toast(`Opslaan mislukt (${e.message}).`);
@@ -415,6 +461,7 @@
       $("st-new").textContent = `✨ ${n.new_left ?? 0}`;
       $("st-streak").textContent = `🔥 ${s.streak}`;
       $("st-learned").textContent = `📚 ${s.learned}/${s.total}`;
+      if (s.xp) showXp(s.xp);
     } catch { /* niet kritisch */ }
   }
 
@@ -501,9 +548,39 @@
     $("view-practice").hidden = view !== "practice";
     $("view-lessons").hidden = view !== "lessons";
     $("view-settings").hidden = view !== "settings";
+    $("view-board").hidden = view !== "board";
+    if (view === "board") loadBoard();
     if (view === "lessons") renderLessons();
     if (view === "settings") loadSettings();
   }
+
+  // ------------------------------------------------------------ ranglijst
+  async function loadBoard(period = state.period || "week") {
+    state.period = period;
+    document.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.period === period));
+    let data;
+    try { data = await getJSON(`/api/leaderboard?period=${period}`); } catch { $("board-info").textContent = "Ranglijst laden mislukt."; return; }
+    $("board-info").textContent = period === "week"
+      ? `De week begint op maandag en loopt nog ${data.days_left} ${data.days_left === 1 ? "dag" : "dagen"}.`
+      : "Alle XP sinds het begin.";
+    const list = $("board-list");
+    list.replaceChildren();
+    const medal = { 1: "🥇", 2: "🥈", 3: "🥉" };
+    data.rows.forEach((r) => {
+      const li = document.createElement("li");
+      li.className = "board-row" + (r.you ? " you" : "");
+      const mk = (cls, text) => { const s = document.createElement("span"); s.className = cls; s.textContent = text; return s; };
+      li.append(
+        mk("b-rank", r.xp > 0 && medal[r.rank] ? medal[r.rank] : String(r.rank)),
+        mk("b-name", r.you ? `${r.name} (jij)` : r.name),
+        mk("b-meta", `Lv ${r.level}${r.streak ? ` · 🔥 ${r.streak}` : ""}`),
+        mk("b-xp", `${r.xp} XP`),
+      );
+      list.append(li);
+    });
+  }
+
+  document.querySelectorAll(".seg-btn").forEach((b) => { b.onclick = () => loadBoard(b.dataset.period); });
 
   // ------------------------------------------------------------ instellingen
   function setMsg(text, bad) {
@@ -519,6 +596,7 @@
     $("set-status").textContent = src || "Er is geen Azure-sleutel: luisteren en uitspraak beoordelen werken niet.";
     if (s.azure_region) $("set-region").value = s.azure_region;
     $("set-remove").hidden = s.azure_source !== "own";
+    $("pw-section").hidden = !s.has_password;
     $("set-save").disabled = !s.can_store_key;
     if (!s.can_store_key) setMsg("Eigen sleutels opslaan staat uit op deze server (KEY_SECRET ontbreekt).", true);
   }
@@ -526,6 +604,7 @@
   async function loadSettings() {
     setMsg("");
     $("set-logout").hidden = !store.get("hb_token");
+    $("pw-msg").hidden = true;
     try { showSettings(await getJSON("/api/settings")); } catch { setMsg("Instellingen laden mislukt.", true); }
   }
 
@@ -557,7 +636,19 @@
     setMsg("Eigen sleutel verwijderd.");
   };
 
-  $("set-logout").onclick = () => {
+  $("pw-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const m = $("pw-msg");
+    const res = await api("/api/settings/password", { method: "PUT", json: { old: $("pw-old").value, new: $("pw-new").value } });
+    const data = await res.json().catch(() => ({}));
+    m.hidden = false;
+    m.classList.toggle("bad", !res.ok);
+    m.textContent = res.ok ? "Wachtwoord gewijzigd. Andere apparaten zijn uitgelogd." : (data.detail || "Wijzigen mislukt.");
+    if (res.ok) { $("pw-old").value = ""; $("pw-new").value = ""; }
+  };
+
+  $("set-logout").onclick = async () => {
+    try { await api("/api/logout", { method: "POST" }); } catch { /* ook zonder server uitloggen */ }
     try { localStorage.removeItem("hb_token"); } catch { /* niets */ }
     location.reload();
   };
