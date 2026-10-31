@@ -156,6 +156,138 @@
         {"id": "10-6", "ko": "모르겠어요", "rom": "moreugesseoyo", "nl": "Ik weet het niet / begrijp het niet"},
         {"id": "10-7", "ko": "알겠어요", "rom": "algesseoyo", "nl": "Begrepen"}
       ]
+    },
+    {
+      "id": 11,
+      "title": "Zinsbouw en partikels",
+      "note": "Het werkwoord staat altijd achteraan: onderwerp – voorwerp – werkwoord. Kleine woordjes (partikels) achter een woord tonen zijn rol: 을/를 = lijdend voorwerp (를 na een klinker, 을 na een medeklinker), 에 = bestemming of tijdstip, 에서 = plaats waar je iets doet, 도 = ook.",
+      "items": [
+        {"id": "11-1", "ko": "저는 물을 마셔요", "rom": "jeoneun mureul masyeoyo", "nl": "Ik drink water"},
+        {"id": "11-2", "ko": "저는 밥을 먹어요", "rom": "jeoneun babeul meogeoyo", "nl": "Ik eet (rijst)", "tip": "밥을 lees je als 바블: de ㅂ glijdt mee naar de volgende lettergreep."},
+        {"id": "11-3", "ko": "김치를 먹어요", "rom": "gimchireul meogeoyo", "nl": "Ik eet kimchi"},
+        {"id": "11-4", "ko": "커피를 좋아해요", "rom": "keopireul joahaeyo", "nl": "Ik hou van koffie"},
+        {"id": "11-5", "ko": "학교에 가요", "rom": "hakgyoe gayo", "nl": "Ik ga naar school"},
+        {"id": "11-6", "ko": "집에서 공부해요", "rom": "jibeseo gongbuhaeyo", "nl": "Ik studeer thuis", "tip": "집에서 klinkt als 지베서."},
+        {"id": "11-7", "ko": "식당에서 밥을 먹어요", "rom": "sikdangeseo babeul meogeoyo", "nl": "Ik eet in het restaurant"},
+        {"id": "11-8", "ko": "저도 학생이에요", "rom": "jeodo haksaengieyo", "nl": "Ik ben ook student"},
+        {"id": "11-9", "ko": "친구도 와요", "rom": "chingudo wayo", "nl": "Mijn vriend komt ook"}
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Formeel en beleefd",
+      "note": "Naast -요 bestaat de formele vorm. Stam op een klinker + ㅂ니다 (가다 → 갑니다), stam op een medeklinker + 습니다 (먹다 → 먹습니다). Je hoort het in het nieuws, op het werk, bij presentaties en bij een eerste kennismaking. In het dagelijks leven is -요 gewoner.",
+      "items": [
+        {"id": "12-1", "ko": "갑니다", "rom": "gamnida", "nl": "(ik) ga (formeel)", "tip": "갑니다 klinkt als 감니다."},
+        {"id": "12-2", "ko": "옵니다", "rom": "omnida", "nl": "(ik) kom (formeel)"},
+        {"id": "12-3", "ko": "먹습니다", "rom": "meokseumnida", "nl": "(ik) eet (formeel)", "tip": "먹습니다 klinkt als 먹씀니다."},
+        {"id": "12-4", "ko": "마십니다", "rom": "masimnida", "nl": "(ik) drink (formeel)"},
+        {"id": "12-5", "ko": "공부합니다", "rom": "gongbuhamnida", "nl": "(ik) studeer (formeel)"},
+        {"id": "12-6", "ko": "학생입니다", "rom": "haksaengimnida", "nl": "Ik ben student (formeel)"},
+        {"id": "12-7", "ko": "저는 벨기에 사람입니다", "rom": "jeoneun belgie saramimnida", "nl": "Ik ben Belg (formeel)"},
+        {"id": "12-8", "ko": "만나서 반갑습니다", "rom": "mannaseo bangapseumnida", "nl": "Aangenaam kennis te maken (formeel)"},
+        {"id": "12-9", "ko": "잘 부탁드립니다", "rom": "jal butakdeurimnida", "nl": "Ik reken op uw medewerking (beleefd bij een kennismaking)"}
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Meer werkwoorden",
+      "note": "Stam van het werkwoord (woordenboekvorm zonder 다) + 아요 als de laatste klinker ㅏ of ㅗ is, anders + 어요. Bij 하다 wordt het 해요. Een stam op ㅡ verliest die klinker: 쓰다 → 써요. Tussen haakjes staat steeds de woordenboekvorm.",
+      "items": [
+        {"id": "13-1", "ko": "자요", "rom": "jayo", "nl": "(ik) slaap (자다)"},
+        {"id": "13-2", "ko": "일어나요", "rom": "ireonayo", "nl": "(ik) sta op (일어나다)"},
+        {"id": "13-3", "ko": "읽어요", "rom": "ilgeoyo", "nl": "(ik) lees (읽다)", "tip": "읽어요 klinkt als 일거요: de ㄱ verhuist mee naar de volgende lettergreep."},
+        {"id": "13-4", "ko": "써요", "rom": "sseoyo", "nl": "(ik) schrijf (쓰다)", "tip": "쓰다 verliest de ㅡ: ㅆ + ㅓ = 써."},
+        {"id": "13-5", "ko": "사요", "rom": "sayo", "nl": "(ik) koop (사다)"},
+        {"id": "13-6", "ko": "만나요", "rom": "mannayo", "nl": "(ik) ontmoet (만나다)"},
+        {"id": "13-7", "ko": "살아요", "rom": "sarayo", "nl": "(ik) woon (살다)", "tip": "살아요 klinkt als 사라요."},
+        {"id": "13-8", "ko": "일해요", "rom": "ilhaeyo", "nl": "(ik) werk (일하다)"},
+        {"id": "13-9", "ko": "말해요", "rom": "malhaeyo", "nl": "(ik) spreek (말하다)"},
+        {"id": "13-10", "ko": "놀아요", "rom": "norayo", "nl": "(ik) speel, ik ga uit (놀다)"}
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Verleden tijd",
+      "note": "Verleden tijd: stam + 았어요 als de laatste klinker ㅏ of ㅗ is, anders + 었어요. 하다 wordt 했어요. Het is dezelfde regel als in de tegenwoordige tijd, met een ㅆ erbij.",
+      "items": [
+        {"id": "14-1", "ko": "갔어요", "rom": "gasseoyo", "nl": "(ik) ging"},
+        {"id": "14-2", "ko": "왔어요", "rom": "wasseoyo", "nl": "(ik) kwam"},
+        {"id": "14-3", "ko": "먹었어요", "rom": "meogeosseoyo", "nl": "(ik) at"},
+        {"id": "14-4", "ko": "마셨어요", "rom": "masyeosseoyo", "nl": "(ik) dronk"},
+        {"id": "14-5", "ko": "봤어요", "rom": "bwasseoyo", "nl": "(ik) zag, keek"},
+        {"id": "14-6", "ko": "했어요", "rom": "haesseoyo", "nl": "(ik) deed"},
+        {"id": "14-7", "ko": "공부했어요", "rom": "gongbuhaesseoyo", "nl": "(ik) studeerde"},
+        {"id": "14-8", "ko": "어제 학교에 갔어요", "rom": "eoje hakgyoe gasseoyo", "nl": "Gisteren ging ik naar school"},
+        {"id": "14-9", "ko": "아침에 커피를 마셨어요", "rom": "achime keopireul masyeosseoyo", "nl": "'s Ochtends dronk ik koffie"},
+        {"id": "14-10", "ko": "맛있었어요", "rom": "masisseosseoyo", "nl": "Het was lekker", "tip": "맛있었어요 klinkt als 마시써써요."}
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Ontkenning",
+      "note": "Voor een werkwoord zet je 안 om het te ontkennen (안 가요 = ik ga niet). 못 betekent dat je het niet kunt (못 가요 = ik kan niet gaan). Bij werkwoorden op -하다 komt 안 of 못 vóór 해요: 공부 안 해요. Voor 'er is' en 'er is niet' heb je 있어요 en 없어요.",
+      "items": [
+        {"id": "15-1", "ko": "안 가요", "rom": "an gayo", "nl": "Ik ga niet"},
+        {"id": "15-2", "ko": "안 먹어요", "rom": "an meogeoyo", "nl": "Ik eet niet"},
+        {"id": "15-3", "ko": "안 마셔요", "rom": "an masyeoyo", "nl": "Ik drink niet"},
+        {"id": "15-4", "ko": "공부 안 해요", "rom": "gongbu an haeyo", "nl": "Ik studeer niet", "tip": "Bij -하다-werkwoorden komt 안 tussen het zelfstandig deel en 해요."},
+        {"id": "15-5", "ko": "못 가요", "rom": "mot gayo", "nl": "Ik kan niet gaan", "tip": "못 가요 klinkt ongeveer als 모까요: de g wordt hard."},
+        {"id": "15-6", "ko": "못 먹어요", "rom": "mot meogeoyo", "nl": "Ik kan het niet eten", "tip": "못 먹어요 klinkt als 몬머거요."},
+        {"id": "15-7", "ko": "못 해요", "rom": "mot haeyo", "nl": "Ik kan het niet"},
+        {"id": "15-8", "ko": "김치를 안 좋아해요", "rom": "gimchireul an joahaeyo", "nl": "Ik hou niet van kimchi"},
+        {"id": "15-9", "ko": "안 맛있어요", "rom": "an masisseoyo", "nl": "Het is niet lekker"},
+        {"id": "15-10", "ko": "있어요", "rom": "isseoyo", "nl": "Er is / ik heb"},
+        {"id": "15-11", "ko": "없어요", "rom": "eopseoyo", "nl": "Er is niet / ik heb niet", "tip": "없어요 klinkt als 업써요."}
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Vraagwoorden",
+      "note": "Een vraagwoord staat op de plek waar het antwoord zou staan. Er komt geen apart vraagwoordje bij: je stem gaat aan het einde van de zin omhoog. 뭐 is de korte, gewone vorm van 무엇.",
+      "items": [
+        {"id": "16-1", "ko": "뭐", "rom": "mwo", "nl": "wat"},
+        {"id": "16-2", "ko": "누구", "rom": "nugu", "nl": "wie"},
+        {"id": "16-3", "ko": "어디", "rom": "eodi", "nl": "waar"},
+        {"id": "16-4", "ko": "언제", "rom": "eonje", "nl": "wanneer"},
+        {"id": "16-5", "ko": "왜", "rom": "wae", "nl": "waarom"},
+        {"id": "16-6", "ko": "어떻게", "rom": "eotteoke", "nl": "hoe", "tip": "어떻게 klinkt als 어떠케."},
+        {"id": "16-7", "ko": "몇", "rom": "myeot", "nl": "hoeveel (bij tellen)"},
+        {"id": "16-8", "ko": "뭐예요?", "rom": "mwoyeyo?", "nl": "Wat is het?"},
+        {"id": "16-9", "ko": "누구예요?", "rom": "nuguyeyo?", "nl": "Wie is het?"}
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Vragen stellen",
+      "note": "Een gewone vraag klinkt als een bewering, maar je stem gaat aan het einde omhoog: 가요? = Ga je? Zet je een vraagwoord op de plek van het antwoord, dan heb je een open vraag. Zo bouw je zinnen uit de vorige lessen om tot vragen.",
+      "items": [
+        {"id": "17-1", "ko": "이름이 뭐예요?", "rom": "ireumi mwoyeyo?", "nl": "Hoe heet je? (letterlijk: wat is je naam)"},
+        {"id": "17-2", "ko": "뭐 먹어요?", "rom": "mwo meogeoyo?", "nl": "Wat eet je?"},
+        {"id": "17-3", "ko": "어디에 가요?", "rom": "eodie gayo?", "nl": "Waar ga je naartoe?"},
+        {"id": "17-4", "ko": "어디에 살아요?", "rom": "eodie sarayo?", "nl": "Waar woon je?"},
+        {"id": "17-5", "ko": "언제 와요?", "rom": "eonje wayo?", "nl": "Wanneer kom je?"},
+        {"id": "17-6", "ko": "왜 안 가요?", "rom": "wae an gayo?", "nl": "Waarom ga je niet?"},
+        {"id": "17-7", "ko": "어떻게 가요?", "rom": "eotteoke gayo?", "nl": "Hoe ga ik erheen?"},
+        {"id": "17-8", "ko": "몇 살이에요?", "rom": "myeot sarieyo?", "nl": "Hoe oud ben je?"}
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Willen en plannen",
+      "note": "-고 싶어요 achter de stam betekent 'ik wil' (가다 → 가고 싶어요). -ㄹ 거예요 (na een medeklinker -을 거예요) is de toekomst of een plan (가다 → 갈 거예요). 같이 = samen; 같이 가요 betekent ook 'laten we samen gaan'.",
+      "items": [
+        {"id": "18-1", "ko": "가고 싶어요", "rom": "gago sipeoyo", "nl": "Ik wil gaan"},
+        {"id": "18-2", "ko": "먹고 싶어요", "rom": "meokgo sipeoyo", "nl": "Ik wil eten"},
+        {"id": "18-3", "ko": "커피를 마시고 싶어요", "rom": "keopireul masigo sipeoyo", "nl": "Ik wil koffie drinken"},
+        {"id": "18-4", "ko": "한국에 가고 싶어요", "rom": "hanguge gago sipeoyo", "nl": "Ik wil naar Korea gaan"},
+        {"id": "18-5", "ko": "내일 갈 거예요", "rom": "naeil gal geoyeyo", "nl": "Morgen ga ik"},
+        {"id": "18-6", "ko": "주말에 공부할 거예요", "rom": "jumare gongbuhal geoyeyo", "nl": "In het weekend ga ik studeren"},
+        {"id": "18-7", "ko": "뭐 하고 싶어요?", "rom": "mwo hago sipeoyo?", "nl": "Wat wil je doen?"},
+        {"id": "18-8", "ko": "뭐 할 거예요?", "rom": "mwo hal geoyeyo?", "nl": "Wat ga je doen?"},
+        {"id": "18-9", "ko": "같이 가요", "rom": "gachi gayo", "nl": "Laten we samen gaan", "tip": "같이 klinkt als 가치."},
+        {"id": "18-10", "ko": "같이 먹어요", "rom": "gachi meogeoyo", "nl": "Laten we samen eten"}
+      ]
     }
   ]
 }

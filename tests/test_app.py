@@ -477,7 +477,7 @@ def test_all_courses_are_valid(multi):
     assert set(main.COURSES) == {"ko", "de", "it", "ja", "zh"}
     all_ids = set()
     for code, course in main.COURSES.items():
-        assert len(course["lessons"]) == 10, code
+        assert len(course["lessons"]) == (18 if code == "ko" else 10), code
         for les in course["lessons"]:
             assert les["title"] and les["note"] and len(les["items"]) >= 7, (code, les["id"])
             for it in les["items"]:
