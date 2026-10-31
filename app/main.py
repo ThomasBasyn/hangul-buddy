@@ -338,6 +338,20 @@ def remove_user(name: str) -> None:
         con.execute("DELETE FROM users WHERE id=?", (row["id"],))
 
 
+def add_speech_time(name: str, seconds: float, lang: str = "ko", month: str | None = None) -> float:
+    """Boekt achteraf spreektijd bij (bv. van vóór de teller bestond). Geeft het nieuwe maandtotaal terug."""
+    month = month or today().isoformat()[:7]
+    if lang not in LANGS or not MONTH_RE.match(month) or not 0 < seconds <= 86400:
+        raise ValueError("ongeldige taal, maand of aantal seconden")
+    with db() as con:
+        row = con.execute("SELECT id FROM users WHERE lower(name)=lower(?)", (clean_name(name),)).fetchone()
+        if not row:
+            raise ValueError(f"gebruiker '{name}' niet gevonden")
+        con.execute("INSERT INTO speech_log (user_id, ts, month, seconds, lang, source) VALUES (?,?,?,?,?,'shared')",
+                    (row["id"], now_iso(), month, seconds, lang))
+        return con.execute("SELECT SUM(seconds) FROM speech_log WHERE user_id=? AND month=?", (row["id"], month)).fetchone()[0]
+
+
 def list_users() -> list[dict]:
     with db() as con:
         return [dict(r) | {"words": con.execute("SELECT COUNT(*) FROM progress WHERE user_id=?", (r["id"],)).fetchone()[0]}
