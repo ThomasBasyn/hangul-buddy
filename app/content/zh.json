@@ -1,0 +1,162 @@
+{
+  "course": "Chinees (Mandarijn) voor beginners",
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Begroetingen",
+      "note": "Mandarijn is een toontaal: dezelfde lettergreep betekent iets anders bij een andere toon. Toon 1 is hoog en vlak (ā), toon 2 stijgt (á), toon 3 daalt en stijgt (ǎ) en toon 4 valt scherp (à). De pinyin met toonmarkering staat onder het teken. De tekens zijn vereenvoudigd Chinees.",
+      "items": [
+        {"id": "1-1", "text": "你好", "rom": "nǐ hǎo", "nl": "Hallo", "tip": "Twee derde tonen na elkaar: de eerste wordt uitgesproken als een stijgende tweede toon, 'ní hǎo'."},
+        {"id": "1-2", "text": "您好", "rom": "nín hǎo", "nl": "Hallo (beleefd)"},
+        {"id": "1-3", "text": "早上好", "rom": "zǎoshang hǎo", "nl": "Goedemorgen"},
+        {"id": "1-4", "text": "晚上好", "rom": "wǎnshang hǎo", "nl": "Goedenavond"},
+        {"id": "1-5", "text": "谢谢", "rom": "xièxie", "nl": "Dank je", "tip": "De x klinkt als een zachte 'sj' met je tong plat tegen je tanden. De tweede 'xie' is kort en zonder toon."},
+        {"id": "1-6", "text": "不客气", "rom": "bú kèqi", "nl": "Graag gedaan", "tip": "不 is eigenlijk 'bù', maar voor een vierde toon wordt het 'bú'."},
+        {"id": "1-7", "text": "对不起", "rom": "duìbuqǐ", "nl": "Sorry"},
+        {"id": "1-8", "text": "没关系", "rom": "méi guānxi", "nl": "Geen probleem"},
+        {"id": "1-9", "text": "再见", "rom": "zàijiàn", "nl": "Tot ziens"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Jezelf voorstellen",
+      "note": "Chinese werkwoorden worden niet vervoegd. 我 = ik, 你 = jij, 他 / 她 = hij / zij. 是 (shì) betekent 'zijn': 'wǒ shì xuéshēng' = 'ik ben student'. Een ja/nee-vraag maak je met 吗 (ma) aan het eind van de zin.",
+      "items": [
+        {"id": "2-1", "text": "我", "rom": "wǒ", "nl": "ik"},
+        {"id": "2-2", "text": "你", "rom": "nǐ", "nl": "jij"},
+        {"id": "2-3", "text": "我叫托马斯", "rom": "wǒ jiào Tuōmǎsī", "nl": "Ik heet Thomas", "tip": "Met 叫 (jiào) noem je je naam: 'wǒ jiào …'."},
+        {"id": "2-4", "text": "你叫什么名字？", "rom": "nǐ jiào shénme míngzi?", "nl": "Hoe heet je?"},
+        {"id": "2-5", "text": "我是学生", "rom": "wǒ shì xuéshēng", "nl": "Ik ben student"},
+        {"id": "2-6", "text": "我是比利时人", "rom": "wǒ shì Bǐlìshí rén", "nl": "Ik ben Belg", "tip": "人 (rén) betekent 'persoon': landnaam + 人 = inwoner van dat land."},
+        {"id": "2-7", "text": "很高兴认识你", "rom": "hěn gāoxìng rènshi nǐ", "nl": "Aangenaam kennis te maken"},
+        {"id": "2-8", "text": "你好吗？", "rom": "nǐ hǎo ma?", "nl": "Hoe gaat het?"},
+        {"id": "2-9", "text": "我很好", "rom": "wǒ hěn hǎo", "nl": "Het gaat goed"}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Getallen 1 tot 10",
+      "note": "De getallen 1 tot 10 zijn de basis voor alles wat daarna komt. Let goed op de tonen, en op sì (vier) en shí (tien): die klinken voor een beginner bijna hetzelfde.",
+      "items": [
+        {"id": "3-1", "text": "一", "rom": "yī", "nl": "1"},
+        {"id": "3-2", "text": "二", "rom": "èr", "nl": "2"},
+        {"id": "3-3", "text": "三", "rom": "sān", "nl": "3"},
+        {"id": "3-4", "text": "四", "rom": "sì", "nl": "4", "tip": "Een gewone s, niet 'sj'. Vergelijk met shí (tien), dat met 'sj' begint."},
+        {"id": "3-5", "text": "五", "rom": "wǔ", "nl": "5"},
+        {"id": "3-6", "text": "六", "rom": "liù", "nl": "6"},
+        {"id": "3-7", "text": "七", "rom": "qī", "nl": "7", "tip": "De q klinkt als 'tsj' met een vlakke tong, met een lichte uitademing."},
+        {"id": "3-8", "text": "八", "rom": "bā", "nl": "8"},
+        {"id": "3-9", "text": "九", "rom": "jiǔ", "nl": "9", "tip": "De j klinkt als 'dzj' zonder uitademing."},
+        {"id": "3-10", "text": "十", "rom": "shí", "nl": "10", "tip": "De sh is een 'sj' met je tong omhoog gekruld."}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Getallen verder",
+      "note": "Hogere getallen bouw je regelmatig op: 11 = tien-één (十一), 20 = twee-tien (二十), 21 = twee-tien-één (二十一). Bij 100, 1000 en 10.000 zet je 一 ervoor: 一百, 一千, 一万. De toon van 一 verandert dan mee (yì of yí).",
+      "items": [
+        {"id": "4-1", "text": "十一", "rom": "shíyī", "nl": "11"},
+        {"id": "4-2", "text": "十二", "rom": "shí'èr", "nl": "12"},
+        {"id": "4-3", "text": "二十", "rom": "èrshí", "nl": "20"},
+        {"id": "4-4", "text": "二十一", "rom": "èrshíyī", "nl": "21"},
+        {"id": "4-5", "text": "三十", "rom": "sānshí", "nl": "30"},
+        {"id": "4-6", "text": "五十", "rom": "wǔshí", "nl": "50"},
+        {"id": "4-7", "text": "一百", "rom": "yì bǎi", "nl": "100", "tip": "一 klinkt hier als 'yì' (vierde toon) omdat er een derde toon op volgt."},
+        {"id": "4-8", "text": "一千", "rom": "yì qiān", "nl": "1000"},
+        {"id": "4-9", "text": "一万", "rom": "yí wàn", "nl": "10.000", "tip": "Chinezen tellen in tienduizendtallen: 100.000 is 'tien wàn' (十万)."}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Familie en vrienden",
+      "note": "Chinees heeft aparte woorden voor oudere en jongere broers en zussen. Veel familiewoorden bestaan uit een herhaalde lettergreep, waarvan de tweede kort en zonder toon wordt uitgesproken (māma, bàba).",
+      "items": [
+        {"id": "5-1", "text": "妈妈", "rom": "māma", "nl": "moeder"},
+        {"id": "5-2", "text": "爸爸", "rom": "bàba", "nl": "vader"},
+        {"id": "5-3", "text": "哥哥", "rom": "gēge", "nl": "oudere broer"},
+        {"id": "5-4", "text": "姐姐", "rom": "jiějie", "nl": "oudere zus"},
+        {"id": "5-5", "text": "弟弟", "rom": "dìdi", "nl": "jongere broer"},
+        {"id": "5-6", "text": "妹妹", "rom": "mèimei", "nl": "jongere zus"},
+        {"id": "5-7", "text": "朋友", "rom": "péngyou", "nl": "vriend / vriendin"},
+        {"id": "5-8", "text": "家人", "rom": "jiārén", "nl": "familie"},
+        {"id": "5-9", "text": "孩子", "rom": "háizi", "nl": "kind"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Eten en drinken",
+      "note": "Met 我要… (wǒ yào …) bestel je iets: 'wǒ yào shuǐ' = 'ik wil water'. Voeg 请 (qǐng, 'alstublieft') toe om het beleefder te maken. In Chinese restaurants vraag je de rekening met 买单.",
+      "items": [
+        {"id": "6-1", "text": "水", "rom": "shuǐ", "nl": "water"},
+        {"id": "6-2", "text": "咖啡", "rom": "kāfēi", "nl": "koffie"},
+        {"id": "6-3", "text": "茶", "rom": "chá", "nl": "thee", "tip": "De ch klinkt als 'tsj' met je tong omhoog gekruld en een stevige uitademing."},
+        {"id": "6-4", "text": "米饭", "rom": "mǐfàn", "nl": "rijst"},
+        {"id": "6-5", "text": "面包", "rom": "miànbāo", "nl": "brood"},
+        {"id": "6-6", "text": "苹果", "rom": "píngguǒ", "nl": "appel"},
+        {"id": "6-7", "text": "我要水", "rom": "wǒ yào shuǐ", "nl": "Ik wil water"},
+        {"id": "6-8", "text": "买单", "rom": "mǎidān", "nl": "De rekening, alstublieft"},
+        {"id": "6-9", "text": "好吃", "rom": "hǎochī", "nl": "Lekker (van eten)"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Plaatsen",
+      "note": "Met 在 (zài) zeg je waar iets of iemand is: 'wǒ zài jiā' = 'ik ben thuis'. 哪里 (nǎlǐ) betekent 'waar': 'huǒchēzhàn zài nǎlǐ?' = 'waar is het treinstation?'.",
+      "items": [
+        {"id": "7-1", "text": "家", "rom": "jiā", "nl": "huis / thuis"},
+        {"id": "7-2", "text": "学校", "rom": "xuéxiào", "nl": "school"},
+        {"id": "7-3", "text": "火车站", "rom": "huǒchēzhàn", "nl": "treinstation"},
+        {"id": "7-4", "text": "餐厅", "rom": "cāntīng", "nl": "restaurant"},
+        {"id": "7-5", "text": "厕所", "rom": "cèsuǒ", "nl": "toilet"},
+        {"id": "7-6", "text": "火车站在哪里？", "rom": "huǒchēzhàn zài nǎlǐ?", "nl": "Waar is het treinstation?"},
+        {"id": "7-7", "text": "左边", "rom": "zuǒbian", "nl": "links"},
+        {"id": "7-8", "text": "右边", "rom": "yòubian", "nl": "rechts"},
+        {"id": "7-9", "text": "一直走", "rom": "yìzhí zǒu", "nl": "rechtdoor lopen"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Basiswerkwoorden",
+      "note": "Chinese werkwoorden worden niet vervoegd: 吃 (chī) is 'eet', 'at' en 'zal eten', afhankelijk van de context. Een ontkenning maak je met 不 (bù) vóór het werkwoord: 'wǒ bù chī' = 'ik eet niet'.",
+      "items": [
+        {"id": "8-1", "text": "吃", "rom": "chī", "nl": "eten"},
+        {"id": "8-2", "text": "喝", "rom": "hē", "nl": "drinken"},
+        {"id": "8-3", "text": "去", "rom": "qù", "nl": "gaan"},
+        {"id": "8-4", "text": "来", "rom": "lái", "nl": "komen"},
+        {"id": "8-5", "text": "看", "rom": "kàn", "nl": "kijken"},
+        {"id": "8-6", "text": "有", "rom": "yǒu", "nl": "hebben"},
+        {"id": "8-7", "text": "我喝水", "rom": "wǒ hē shuǐ", "nl": "Ik drink water"},
+        {"id": "8-8", "text": "我去学校", "rom": "wǒ qù xuéxiào", "nl": "Ik ga naar school"}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Tijd",
+      "note": "De klok zeg je met 点 (diǎn): 三点 (sān diǎn) is drie uur. Een tijd staat in de zin vóór het werkwoord: 'wǒ sān diǎn qù xuéxiào' = 'ik ga om drie uur naar school'.",
+      "items": [
+        {"id": "9-1", "text": "今天", "rom": "jīntiān", "nl": "vandaag"},
+        {"id": "9-2", "text": "明天", "rom": "míngtiān", "nl": "morgen"},
+        {"id": "9-3", "text": "昨天", "rom": "zuótiān", "nl": "gisteren"},
+        {"id": "9-4", "text": "现在", "rom": "xiànzài", "nl": "nu"},
+        {"id": "9-5", "text": "现在几点？", "rom": "xiànzài jǐ diǎn?", "nl": "Hoe laat is het?"},
+        {"id": "9-6", "text": "三点", "rom": "sān diǎn", "nl": "Drie uur"},
+        {"id": "9-7", "text": "星期一", "rom": "xīngqīyī", "nl": "maandag", "tip": "Weekdagen zijn genummerd: 星期一 is 'weekdag één', 星期二 is dinsdag, enzovoort."},
+        {"id": "9-8", "text": "周末", "rom": "zhōumò", "nl": "weekend"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Handige zinnen",
+      "note": "Met 我不懂 (wǒ bù dǒng) zeg je dat je het niet begrijpt, en met 请再说一遍 vraag je om herhaling. 请 (qǐng) maakt een verzoek beleefd.",
+      "items": [
+        {"id": "10-1", "text": "我不懂", "rom": "wǒ bù dǒng", "nl": "Ik begrijp het niet"},
+        {"id": "10-2", "text": "请再说一遍", "rom": "qǐng zài shuō yí biàn", "nl": "Zegt u dat alstublieft nog eens"},
+        {"id": "10-3", "text": "你会说英语吗？", "rom": "nǐ huì shuō Yīngyǔ ma?", "nl": "Spreek je Engels?"},
+        {"id": "10-4", "text": "请说慢一点", "rom": "qǐng shuō màn yìdiǎn", "nl": "Praat alstublieft wat langzamer"},
+        {"id": "10-5", "text": "多少钱？", "rom": "duōshao qián?", "nl": "Hoeveel kost het?"},
+        {"id": "10-6", "text": "我不知道", "rom": "wǒ bù zhīdào", "nl": "Ik weet het niet"},
+        {"id": "10-7", "text": "没问题", "rom": "méi wèntí", "nl": "Geen probleem"}
+      ]
+    }
+  ]
+}

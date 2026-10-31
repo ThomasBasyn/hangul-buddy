@@ -1,0 +1,163 @@
+{
+  "course": "Duits voor beginners",
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Begroetingen",
+      "note": "Duits kent 'du' (informeel) en 'Sie' (formeel, altijd met hoofdletter). Tegen onbekenden, in winkels en op het werk gebruik je 'Sie'. Zelfstandige naamwoorden schrijf je in het Duits altijd met een hoofdletter.",
+      "items": [
+        {"id": "1-1", "text": "Hallo", "nl": "Hallo"},
+        {"id": "1-2", "text": "Guten Morgen", "nl": "Goedemorgen"},
+        {"id": "1-3", "text": "Guten Tag", "nl": "Goedendag", "tip": "De g aan het eind van 'Tag' klinkt als een k: je zegt ongeveer 'taak'."},
+        {"id": "1-4", "text": "Guten Abend", "nl": "Goedenavond"},
+        {"id": "1-5", "text": "Gute Nacht", "nl": "Welterusten", "tip": "De ch in 'Nacht' is een keelklank, zoals de g in het Nederlandse 'nacht'."},
+        {"id": "1-6", "text": "Auf Wiedersehen", "nl": "Tot ziens", "tip": "De w klinkt als een v en 'ie' is een lange i: 'auf VIE-der-zee-en'."},
+        {"id": "1-7", "text": "Tschüss", "nl": "Doei", "tip": "De ü spreek je uit als een i met ronde lippen, zoals de 'uu' in 'muur' maar korter."},
+        {"id": "1-8", "text": "Danke", "nl": "Dank je"},
+        {"id": "1-9", "text": "Bitte", "nl": "Alsjeblieft / Graag gedaan"},
+        {"id": "1-10", "text": "Entschuldigung", "nl": "Pardon / Sorry", "tip": "'sch' klinkt als 'sj' en 'ung' als 'oeng': 'ent-SJOEL-di-goeng'."}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Jezelf voorstellen",
+      "note": "Het werkwoord 'sein' (zijn) is onregelmatig: ich bin, du bist, er/sie ist, wir sind, ihr seid, sie/Sie sind. In een gewone zin staat het werkwoord op de tweede plaats: 'Ich komme aus Belgien.'",
+      "items": [
+        {"id": "2-1", "text": "ich", "nl": "ik", "tip": "De ch na een i is zacht, zonder keel: blaas lucht tegen je gehemelte, bijna als 'ish'."},
+        {"id": "2-2", "text": "Ich heiße Thomas.", "nl": "Ik heet Thomas.", "tip": "'ei' klinkt als 'aai' en ß is een scherpe s: 'ich HAAI-se'."},
+        {"id": "2-3", "text": "Wie heißt du?", "nl": "Hoe heet je?"},
+        {"id": "2-4", "text": "Ich bin Student.", "nl": "Ik ben student.", "tip": "Een vrouw zegt 'Ich bin Studentin.'"},
+        {"id": "2-5", "text": "Ich komme aus Belgien.", "nl": "Ik kom uit België."},
+        {"id": "2-6", "text": "Woher kommst du?", "nl": "Waar kom je vandaan?"},
+        {"id": "2-7", "text": "Freut mich.", "nl": "Aangenaam.", "tip": "'eu' klinkt als 'oj': 'FROJT mich'."},
+        {"id": "2-8", "text": "Wie geht's?", "nl": "Hoe gaat het?"},
+        {"id": "2-9", "text": "Gut, danke.", "nl": "Goed, dank je."}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Getallen 1 tot 10",
+      "note": "Let op de klanken die anders zijn dan in het Nederlands: z klinkt als 'ts', w als 'v', v meestal als 'f' en 'ei' als 'aai'.",
+      "items": [
+        {"id": "3-1", "text": "eins", "nl": "één", "tip": "'ei' klinkt als 'aai': 'aains'."},
+        {"id": "3-2", "text": "zwei", "nl": "twee", "tip": "De z klinkt als 'ts': 'tsvaai'."},
+        {"id": "3-3", "text": "drei", "nl": "drie"},
+        {"id": "3-4", "text": "vier", "nl": "vier", "tip": "De v klinkt als f: 'fier'."},
+        {"id": "3-5", "text": "fünf", "nl": "vijf", "tip": "ü is een i met ronde lippen."},
+        {"id": "3-6", "text": "sechs", "nl": "zes", "tip": "'chs' klinkt als 'ks': 'zeks'."},
+        {"id": "3-7", "text": "sieben", "nl": "zeven", "tip": "De s voor een klinker klinkt als een z."},
+        {"id": "3-8", "text": "acht", "nl": "acht"},
+        {"id": "3-9", "text": "neun", "nl": "negen", "tip": "'eu' klinkt als 'oj': 'nojn'."},
+        {"id": "3-10", "text": "zehn", "nl": "tien", "tip": "De z klinkt als 'ts' en 'eh' is een lange e: 'tseen'."}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Getallen verder",
+      "note": "Vanaf 13 bouw je getallen op zoals in het Nederlands: eerst de eenheid. 'einundzwanzig' is letterlijk 'één-en-twintig'. 11 en 12 hebben een eigen woord.",
+      "items": [
+        {"id": "4-1", "text": "elf", "nl": "elf"},
+        {"id": "4-2", "text": "zwölf", "nl": "twaalf", "tip": "ö klinkt als de 'eu' in 'deur', maar korter."},
+        {"id": "4-3", "text": "zwanzig", "nl": "twintig", "tip": "Aan het eind klinkt 'ig' als 'ich': de g wordt een zachte ch."},
+        {"id": "4-4", "text": "einundzwanzig", "nl": "eenentwintig"},
+        {"id": "4-5", "text": "dreißig", "nl": "dertig"},
+        {"id": "4-6", "text": "vierzig", "nl": "veertig"},
+        {"id": "4-7", "text": "fünfzig", "nl": "vijftig"},
+        {"id": "4-8", "text": "hundert", "nl": "honderd"},
+        {"id": "4-9", "text": "tausend", "nl": "duizend", "tip": "'au' klinkt als 'ou': 'TOU-zent'."}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Familie en vrienden",
+      "note": "Zelfstandige naamwoorden hebben een geslacht: der (mannelijk), die (vrouwelijk), das (onzijdig). Leer het woord altijd samen met het lidwoord, want het geslacht valt niet te raden.",
+      "items": [
+        {"id": "5-1", "text": "die Mutter", "nl": "de moeder"},
+        {"id": "5-2", "text": "der Vater", "nl": "de vader", "tip": "De v klinkt als f: 'FA-ter'."},
+        {"id": "5-3", "text": "der Bruder", "nl": "de broer"},
+        {"id": "5-4", "text": "die Schwester", "nl": "de zus", "tip": "'sch' klinkt als 'sj' en w als v: 'SJVES-ter'."},
+        {"id": "5-5", "text": "die Eltern", "nl": "de ouders"},
+        {"id": "5-6", "text": "der Freund", "nl": "de vriend", "tip": "'eu' klinkt als 'oj': 'FROJNT'."},
+        {"id": "5-7", "text": "die Freundin", "nl": "de vriendin"},
+        {"id": "5-8", "text": "die Familie", "nl": "de familie"},
+        {"id": "5-9", "text": "das Kind", "nl": "het kind"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Eten en drinken",
+      "note": "Met 'Ich möchte …' (ik wil graag …) bestel je beleefd. 'Bitte' en 'Danke' maken het compleet. De rekening vraag je met 'Die Rechnung, bitte.'",
+      "items": [
+        {"id": "6-1", "text": "das Wasser", "nl": "het water", "tip": "De w klinkt als een v: 'VAS-ser'."},
+        {"id": "6-2", "text": "der Kaffee", "nl": "de koffie", "tip": "Anders dan in het Nederlands ligt de klemtoon op het eerste deel: 'KA-fee'."},
+        {"id": "6-3", "text": "das Brot", "nl": "het brood"},
+        {"id": "6-4", "text": "der Apfel", "nl": "de appel"},
+        {"id": "6-5", "text": "das Bier", "nl": "het bier"},
+        {"id": "6-6", "text": "die Milch", "nl": "de melk"},
+        {"id": "6-7", "text": "Ich möchte Wasser.", "nl": "Ik wil graag water.", "tip": "ö klinkt als de 'eu' in 'deur', maar korter."},
+        {"id": "6-8", "text": "Die Rechnung, bitte.", "nl": "De rekening, alstublieft."},
+        {"id": "6-9", "text": "Guten Appetit!", "nl": "Smakelijk eten!"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Plaatsen",
+      "note": "Met 'Wo ist …?' vraag je waar iets is. 'in der Stadt' betekent 'in de stad'. Bij een stad of land zeg je 'nach': 'Ich fahre nach Berlin.'",
+      "items": [
+        {"id": "7-1", "text": "das Haus", "nl": "het huis", "tip": "'au' klinkt als 'ou'."},
+        {"id": "7-2", "text": "die Schule", "nl": "de school"},
+        {"id": "7-3", "text": "die Stadt", "nl": "de stad", "tip": "'st' aan het begin van een woord klinkt als 'sjt': 'sjtat'."},
+        {"id": "7-4", "text": "der Bahnhof", "nl": "het station"},
+        {"id": "7-5", "text": "das Restaurant", "nl": "het restaurant"},
+        {"id": "7-6", "text": "Wo ist der Bahnhof?", "nl": "Waar is het station?"},
+        {"id": "7-7", "text": "links", "nl": "links"},
+        {"id": "7-8", "text": "rechts", "nl": "rechts"},
+        {"id": "7-9", "text": "geradeaus", "nl": "rechtdoor"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Basiswerkwoorden",
+      "note": "Regelmatige werkwoorden eindigen in de infinitief op -en. Bij 'ich' vervang je dat door -e (ich trinke), bij 'du' door -st (du trinkst) en bij 'er/sie/es' door -t (er trinkt).",
+      "items": [
+        {"id": "8-1", "text": "trinken", "nl": "drinken"},
+        {"id": "8-2", "text": "essen", "nl": "eten"},
+        {"id": "8-3", "text": "gehen", "nl": "gaan / lopen"},
+        {"id": "8-4", "text": "kommen", "nl": "komen"},
+        {"id": "8-5", "text": "machen", "nl": "doen / maken"},
+        {"id": "8-6", "text": "haben", "nl": "hebben"},
+        {"id": "8-7", "text": "Ich trinke Wasser.", "nl": "Ik drink water."},
+        {"id": "8-8", "text": "Ich habe Hunger.", "nl": "Ik heb honger."}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Tijd",
+      "note": "Met 'um' zeg je om hoe laat: 'um drei Uhr' (om drie uur). Dagen van de week zijn mannelijk (der Montag) en hebben een hoofdletter.",
+      "items": [
+        {"id": "9-1", "text": "heute", "nl": "vandaag", "tip": "'eu' klinkt als 'oj': 'HOJ-te'."},
+        {"id": "9-2", "text": "morgen", "nl": "morgen"},
+        {"id": "9-3", "text": "gestern", "nl": "gisteren"},
+        {"id": "9-4", "text": "die Uhr", "nl": "de klok / het uur", "tip": "Zeg 'oer' met een lange oe."},
+        {"id": "9-5", "text": "Wie spät ist es?", "nl": "Hoe laat is het?", "tip": "'sp' aan het begin klinkt als 'sjp': 'sjpeet'."},
+        {"id": "9-6", "text": "Es ist drei Uhr.", "nl": "Het is drie uur."},
+        {"id": "9-7", "text": "der Montag", "nl": "maandag"},
+        {"id": "9-8", "text": "das Wochenende", "nl": "het weekend", "tip": "w klinkt als v en 'ch' is een keelklank: 'VO-chen-en-de'."}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Handige zinnen",
+      "note": "Met deze zinnen red je je in elk gesprek. 'Sprechen Sie Englisch?' is de beleefde manier om te vragen of iemand Engels spreekt.",
+      "items": [
+        {"id": "10-1", "text": "Ich verstehe nicht.", "nl": "Ik begrijp het niet.", "tip": "'ver-' klinkt als 'fer' en 'st' als 'sjt': 'fer-SJTEE-e'."},
+        {"id": "10-2", "text": "Noch einmal, bitte.", "nl": "Nog een keer, alsjeblieft."},
+        {"id": "10-3", "text": "Sprechen Sie Englisch?", "nl": "Spreekt u Engels?"},
+        {"id": "10-4", "text": "Langsamer, bitte.", "nl": "Langzamer, alsjeblieft."},
+        {"id": "10-5", "text": "Wie viel kostet das?", "nl": "Hoeveel kost dit?", "tip": "'v' klinkt hier als f: 'vie fiel'."},
+        {"id": "10-6", "text": "Ich weiß nicht.", "nl": "Ik weet het niet.", "tip": "'ei' klinkt als 'aai' en ß als een scherpe s."},
+        {"id": "10-7", "text": "Kein Problem.", "nl": "Geen probleem."}
+      ]
+    }
+  ]
+}

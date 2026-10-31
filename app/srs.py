@@ -1,5 +1,6 @@
 """Spaced repetition (SM-2 variant) en uitspraakscore -> beoordeling."""
 
+import unicodedata
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -71,18 +72,26 @@ def jamo(text: str) -> str:
     return "".join(out)
 
 
-def similarity(expected: str, heard: str) -> float:
-    """Score 0-100 op basis van klank-voor-klank overeenkomst (Levenshtein op jamo)."""
-    a, b = jamo(expected), jamo(heard)
-    if not a:
-        return 0.0
-    if not b:
-        return 0.0
+def _levenshtein(a: str, b: str) -> int:
     prev = list(range(len(b) + 1))
     for i, ca in enumerate(a, 1):
         cur = [i]
         for j, cb in enumerate(b, 1):
             cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
         prev = cur
-    dist = prev[-1]
-    return round(max(0.0, 1 - dist / max(len(a), len(b))) * 100, 1)
+    return prev[-1]
+
+
+def letters(text: str) -> str:
+    """Kleine letters zonder accenten, spaties en leestekens (voor talen met ons alfabet, kana en hanzi)."""
+    text = unicodedata.normalize("NFKD", text.lower())
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return "".join(ch for ch in text if ch.isalnum())
+
+
+def similarity(expected: str, heard: str, lang: str = "ko") -> float:
+    """Score 0-100: klank-voor-klank overeenkomst (Koreaans: op jamo, andere talen: op letters of tekens)."""
+    a, b = (jamo(expected), jamo(heard)) if lang == "ko" else (letters(expected), letters(heard))
+    if not a or not b:
+        return 0.0
+    return round(max(0.0, 1 - _levenshtein(a, b) / max(len(a), len(b))) * 100, 1)

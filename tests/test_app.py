@@ -355,7 +355,7 @@ def test_own_azure_key_with_fallback(multi, monkeypatch):
     async def fake_verify(key, region):
         calls.append(("verify", key, region))
 
-    async def fake_assess(wav, ref, key=None, region=None):
+    async def fake_assess(wav, ref, key=None, region=None, **kwargs):
         calls.append(("assess", key, region))
         return {"score": 91.0, "heard": "x", "words": [], "status": "Success"}
 
@@ -476,3 +476,140 @@ def test_old_single_user_database_is_migrated(tmp_path, monkeypatch):
     import main as main2
     with TestClient(main2.app) as c2:
         assert c2.get("/api/stats", headers={"X-App-Token": "baas-code"}).json()["learned"] == 1
+
+
+# ------------------------------------------------------------------ meerdere talen
+def test_all_courses_are_valid(multi):
+    import re
+    main = multi.main
+    assert set(main.COURSES) == {"ko", "de", "it", "ja", "zh"}
+    all_ids = set()
+    for code, course in main.COURSES.items():
+        assert len(course["lessons"]) == 10, code
+        for les in course["lessons"]:
+            assert les["title"] and les["note"] and len(les["items"]) >= 7, (code, les["id"])
+            for it in les["items"]:
+                assert it["text"].strip() and it["nl"].strip(), it
+                assert it["id"].count("-") == 1
+                if code != "ko":
+                    assert re.fullmatch(code + r":\d+-\d+", it["id"]), it["id"]
+                    assert it["ko"] == it["text"]
+                if code in ("ja", "zh"):
+                    assert it.get("rom"), it  # romaji / pinyin
+        assert all_ids.isdisjoint(course["items"])
+        all_ids |= set(course["items"])
+    assert set(main.ITEMS) == all_ids
+    assert main.COURSES["zh"]["locale"] == "zh-CN" and main.COURSES["ja"]["voice"].startswith("ja-JP")
+
+
+def test_language_progress_is_separate(multi):
+    c = multi
+    assert c.get("/api/config", headers=c.mama).json()["lang"] == "ko"
+    assert c.get("/api/next", headers=c.mama).json()["item"]["id"] == "1-1"
+    c.post("/api/grade", json={"item_id": "1-1", "grade": 5}, headers=c.mama)
+
+    assert c.put("/api/lang", json={"lang": "xx"}, headers=c.mama).status_code == 400
+    assert c.put("/api/lang", json={"lang": "de"}, headers=c.mama).status_code == 200
+    cfg = c.get("/api/config", headers=c.mama).json()
+    assert cfg["lang"] == "de" and cfg["locale"] == "de-DE" and [x["code"] for x in cfg["languages"]] == ["ko", "de", "it", "ja", "zh"]
+    card = c.get("/api/next", headers=c.mama).json()
+    assert card["item"]["id"] == "de:1-1" and card["item"]["text"] == "Hallo" and card["item"]["lang"] == "de"
+    st = c.get("/api/stats", headers=c.mama).json()
+    assert st["learned"] == 0 and st["total"] == len(c.main.COURSES["de"]["items"]) and st["lang"] == "de"
+    les = c.get("/api/lessons", headers=c.mama).json()
+    assert les[0]["title"] == "Begroetingen" and les[0]["items"][0]["id"] == "de:1-1" and not les[1]["unlocked"]
+    c.post("/api/grade", json={"item_id": "de:1-1", "grade": 5}, headers=c.mama)
+    assert c.get("/api/stats", headers=c.mama).json()["learned"] == 1
+
+    # terug naar Koreaans: de oude voortgang is er nog en de Duitse telt daar niet mee
+    c.put("/api/lang", json={"lang": "ko"}, headers=c.mama)
+    st = c.get("/api/stats", headers=c.mama).json()
+    assert st["learned"] == 1 and st["total"] == len(c.main.COURSES["ko"]["items"])
+    assert c.get("/api/next", headers=c.mama).json()["item"]["id"] == "1-2"
+    langs = {x["code"]: x for x in c.get("/api/languages", headers=c.mama).json()}
+    assert langs["ko"]["learned"] == 1 and langs["de"]["learned"] == 1 and langs["ja"]["learned"] == 0
+    assert langs["ko"]["current"] and not langs["de"]["current"]
+    # een andere gebruiker blijft op zijn eigen taal
+    assert c.get("/api/config", headers=c.owner).json()["lang"] == "ko"
+
+
+def test_xp_leaderboards_per_language_and_total(multi):
+    c = multi
+    c.post("/api/grade", json={"item_id": "1-1", "grade": 5, "score": 95}, headers=c.mama)        # ko 20
+    c.post("/api/grade", json={"item_id": "de:1-1", "grade": 5, "score": 95}, headers=c.mama)     # de 20
+    c.post("/api/grade", json={"item_id": "ja:1-1", "grade": 4}, headers=c.mama)                  # ja 15
+    c.post("/api/grade", json={"item_id": "de:1-2", "grade": 4}, headers=c.owner)                 # de 15
+
+    def board(**q):
+        rows = c.get("/api/leaderboard", params=q, headers=c.owner).json()["rows"]
+        return [(r["name"], r["xp"]) for r in rows]
+
+    assert board() == [("Mama", 55), ("Baas", 15)]                      # totaal over alle talen
+    assert board(lang="de") == [("Mama", 20), ("Baas", 15)]
+    assert board(lang="ja") == [("Mama", 15)]                           # alleen wie in die taal XP heeft
+    assert board(lang="ko") == [("Mama", 20)]
+    assert board(lang="zh") == []
+    assert board(lang="de", period="all") == [("Mama", 20), ("Baas", 15)]
+    assert c.get("/api/leaderboard", params={"lang": "xx"}, headers=c.owner).status_code == 400
+    st = c.get("/api/stats", headers=c.mama).json()
+    assert st["xp"]["total"] == 55 and st["lang_xp"]["total"] == 20      # standaard Koreaans
+    c.put("/api/lang", json={"lang": "ja"}, headers=c.mama)
+    assert c.get("/api/stats", headers=c.mama).json()["lang_xp"]["total"] == 15
+    assert [x["xp"] for x in c.get("/api/languages", headers=c.mama).json()] == [20, 20, 0, 15, 0]
+
+
+def test_speech_uses_locale_and_voice_of_the_language(multi, monkeypatch):
+    c, main = multi, multi.main
+    seen = {}
+
+    async def fake_assess(wav, ref, key=None, region=None, locale=None):
+        seen["assess"] = (ref, locale)
+        return {"score": 88.0, "heard": ref, "words": [], "status": "Success"}
+
+    async def fake_tts(text, fmt="mp3", rate="-10%", key=None, region=None, voice=None, locale=None):
+        seen["tts"] = (text, voice, locale)
+        return b"ID3audio"
+
+    monkeypatch.setattr(main.azure_speech, "enabled", lambda: True)
+    monkeypatch.setattr(main.azure_speech, "KEY", "gedeelde-sleutel-123456789")
+    monkeypatch.setattr(main.azure_speech, "assess", fake_assess)
+    monkeypatch.setattr(main.azure_speech, "tts", fake_tts)
+    for item, locale, voice in (("1-1", "ko-KR", main.azure_speech.VOICE), ("de:1-1", "de-DE", "de-DE-KatjaNeural"),
+                                ("it:1-1", "it-IT", "it-IT-ElsaNeural"), ("ja:1-1", "ja-JP", "ja-JP-NanamiNeural"),
+                                ("zh:1-1", "zh-CN", "zh-CN-XiaoxiaoNeural")):
+        ref = main.ITEMS[item]["text"]
+        assert c.post(f"/api/assess/{item}", content=wav_bytes(), headers=c.mama).status_code == 200
+        assert seen["assess"] == (ref, locale)
+        assert c.get(f"/api/tts/{item}", headers=c.mama).status_code == 200
+        assert seen["tts"] == (ref, voice, locale)
+    # zelfde tekst in een andere stem wordt apart gecachet
+    assert len(list((main.TTS_CACHE).glob("*.mp3"))) == 5
+
+
+def test_text_similarity_for_other_languages():
+    assert similarity("Guten Tag", "guten tag!", "de") == 100
+    assert similarity("Café", "cafe", "it") == 100
+    assert similarity("Guten Tag", "Guten Morgen", "de") < 70
+    assert similarity("こんにちは", "こんにちは", "ja") == 100
+    assert similarity("你好", "你好吗", "zh") < 100 and similarity("你好", "", "zh") == 0
+    assert similarity("감사합니다", "감사합니다", "ko") == 100
+
+
+def test_database_from_before_languages_is_upgraded(tmp_path, monkeypatch):
+    import sqlite3
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("APP_TOKEN", "baas-code")
+    for mod in ("main", "azure_speech"):
+        sys.modules.pop(mod, None)
+    import main
+    main.init_db()
+    with main.db() as con:
+        if sqlite3.sqlite_version_info < (3, 35):
+            pytest.skip("DROP COLUMN vraagt SQLite 3.35")
+        con.execute("ALTER TABLE users DROP COLUMN lang")
+        con.execute("ALTER TABLE xp_log DROP COLUMN lang")
+        con.execute("INSERT INTO xp_log (user_id, ts, day, amount, reason, item_id) VALUES (1,'x','2026-10-30',15,'review','1-1')")
+    main.init_db()
+    with main.db() as con:
+        assert con.execute("SELECT lang FROM users WHERE id=1").fetchone()[0] == "ko"
+        assert con.execute("SELECT lang, amount FROM xp_log").fetchone()[:] == ("ko", 15)

@@ -4,6 +4,8 @@
 
   const $ = (id) => document.getElementById(id);
   const state = { config: null, card: null, revealed: false, assessed: null, busy: false, recording: null, practice: null, lessons: [] };
+  const LOCALES = { ko: "ko-KR", de: "de-DE", it: "it-IT", ja: "ja-JP", zh: "zh-CN" };
+  const CJK = new Set(["ko", "ja", "zh"]);
   const GRADE_BUTTON = { 1: 1, 2: 1, 3: 3, 4: 4, 5: 5 }; // voorgestelde grade -> knop
 
   // ------------------------------------------------------------ helpers
@@ -130,9 +132,13 @@
     badge.className = `badge ${badgeClass}`;
     $("lesson-name").textContent = `Les ${lesson.id} · ${lesson.title}`;
     const word = $("word");
-    word.textContent = item.ko;
-    word.classList.toggle("long", item.ko.length > 6);
-    $("rom").textContent = item.rom;
+    const text = item.text || item.ko;
+    const lang = item.lang || "ko";
+    word.textContent = text;
+    word.lang = lang;
+    word.classList.toggle("long", text.length > (CJK.has(lang) ? 6 : 12));
+    $("rom").textContent = item.rom || "";
+    $("rom").hidden = !item.rom;
     $("nl").textContent = item.nl;
     $("tip").textContent = item.tip ? `💡 ${item.tip}` : "";
     $("tip").hidden = !item.tip;
@@ -176,7 +182,7 @@
   async function listen(item = state.card?.item) {
     if (!item) return;
     press("btn-listen");
-    const text = item.ko;
+    const text = item.text || item.ko;
     if (state.config?.azure) {
       try {
         const res = await api(`/api/tts/${encodeURIComponent(item.id)}`);
@@ -189,17 +195,17 @@
         }
       } catch { /* val terug op browserstem */ }
     }
-    speakBrowser(text);
+    speakBrowser(text, item.lang || "ko");
   }
 
-  function speakBrowser(text) {
+  function speakBrowser(text, lang = "ko") {
     if (!("speechSynthesis" in window)) return toast("Je browser kan geen tekst voorlezen.");
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ko-KR";
+    u.lang = LOCALES[lang] || lang;
     u.rate = 0.8;
-    const voice = speechSynthesis.getVoices().find((v) => v.lang.replace("_", "-").startsWith("ko"));
+    const voice = speechSynthesis.getVoices().find((v) => v.lang.replace("_", "-").startsWith(lang));
     if (voice) u.voice = voice;
-    else toast("Geen Koreaanse stem gevonden op dit toestel. Stel Azure in voor betere uitspraak.");
+    else toast(`Geen stem voor ${langName(lang).toLowerCase()} gevonden op dit toestel. Stel Azure in voor betere uitspraak.`);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   }
@@ -252,7 +258,7 @@
 
   function recognizeBrowser(SR) {
     const rec = new SR();
-    rec.lang = "ko-KR";
+    rec.lang = LOCALES[state.card?.item?.lang || "ko"] || "ko-KR";
     rec.maxAlternatives = 3;
     rec.interimResults = false;
     let heard = "";
@@ -363,7 +369,7 @@
     if (syl.length) {
       detail = `<div>${syl.map((x) => `<span class="syl ${scoreClass(x.score)}" title="${Math.round(x.score)}%">${esc(x.text)}</span>`).join(" ")}</div>`;
     }
-    const heard = r.heard ? `<div class="heard">Gehoord: <span lang="ko">${esc(r.heard)}</span></div>` : "";
+    const heard = r.heard ? `<div class="heard">Gehoord: <span lang="${esc(state.card?.item?.lang || "ko")}">${esc(r.heard)}</span></div>` : "";
     const verdict = s >= 90 ? "Uitstekend!" : s >= 75 ? "Goed!" : s >= 55 ? "Bijna" : "Nog eens proberen";
     $("feedback").innerHTML = `<div class="score ${scoreClass(s)}">${s}%</div><div>${verdict}</div>${detail}${heard}`;
     reveal();
@@ -381,13 +387,17 @@
     const res = await api("/api/grade", { method: "POST", json: body });
     if (!res.ok) throw new Error(res.status);
     const r = await res.json();
-    if (r.xp) showXp(r.xp);
+    if (r.xp) showXp(r.xp, r.lang_xp, r.lang);
     if (r.xp_gained) { xpToast(r); }
     return r;
   }
 
   // ------------------------------------------------------------ xp
-  function showXp(x) {
+  function langFlag(code) { return (state.config?.languages || []).find((l) => l.code === code)?.flag || ""; }
+  function langName(code) { return (state.config?.languages || []).find((l) => l.code === code)?.name || code; }
+
+  function showXp(x, lx, lang) {
+    if (lx) $("xp-lang").textContent = `${langFlag(lang)} ${lx.total} XP`;
     $("xp-level").textContent = `Lv ${x.level}`;
     $("xp-fill").style.width = `${Math.min(100, Math.round((x.into_level / x.level_size) * 100))}%`;
     $("xp-text").textContent = `${x.total} XP`;
@@ -461,7 +471,7 @@
       $("st-new").textContent = `✨ ${n.new_left ?? 0}`;
       $("st-streak").textContent = `🔥 ${s.streak}`;
       $("st-learned").textContent = `📚 ${s.learned}/${s.total}`;
-      if (s.xp) showXp(s.xp);
+      if (s.xp) showXp(s.xp, s.lang_xp, s.lang);
     } catch { /* niet kritisch */ }
   }
 
@@ -472,7 +482,7 @@
       const pct = Math.round((l.learned / l.total) * 100);
       const seen = l.items.filter((it) => it.seen).length;
       const items = l.unlocked
-        ? `<ul>${l.items.map((it) => `<li class="${it.seen ? "" : "unseen"}"><span class="ko" lang="ko">${esc(it.ko)}</span><span class="tr" title="${esc(it.nl)}">${esc(it.nl)}</span><button class="mini" data-listen="${esc(it.id)}" aria-label="Luister naar ${esc(it.ko)}">🔊</button></li>`).join("")}</ul>`
+        ? `<ul>${l.items.map((it) => `<li class="${it.seen ? "" : "unseen"}"><span class="ko" lang="${esc(it.lang || "ko")}">${esc(it.text || it.ko)}</span><span class="tr" title="${esc(it.nl)}">${esc(it.nl)}</span><button class="mini" data-listen="${esc(it.id)}" aria-label="Luister naar ${esc(it.text || it.ko)}">🔊</button></li>`).join("")}</ul>`
         : "";
       const actions = l.unlocked
         ? `<div class="lesson-actions"><button class="primary sm" data-practice="${l.id}" ${seen ? "" : "disabled"}>🎙️ Oefenen${seen ? ` (${seen} woorden)` : ""}</button>${seen ? "" : "<small>Je hebt hier nog geen woorden gezien.</small>"}</div>`
@@ -549,23 +559,38 @@
     $("view-lessons").hidden = view !== "lessons";
     $("view-settings").hidden = view !== "settings";
     $("view-board").hidden = view !== "board";
+    $("lang-bar").hidden = !(view === "practice" || view === "lessons");
     if (view === "board") loadBoard();
     if (view === "lessons") renderLessons();
     if (view === "settings") loadSettings();
   }
 
   // ------------------------------------------------------------ ranglijst
-  async function loadBoard(period = state.period || "week") {
+  async function loadBoard(period = state.period || "week", lang = state.boardLang || "all") {
     state.period = period;
+    state.boardLang = lang;
+    const sel = $("board-lang");
+    if (sel.options.length !== (state.config?.languages?.length || 0) + 1) {
+      sel.replaceChildren(new Option("🌍 Totaal (alle talen)", "all"),
+        ...(state.config?.languages || []).map((l) => new Option(`${l.flag} ${l.name}`, l.code)));
+    }
+    sel.value = lang;
     document.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.period === period));
     let data;
-    try { data = await getJSON(`/api/leaderboard?period=${period}`); } catch { $("board-info").textContent = "Ranglijst laden mislukt."; return; }
+    try { data = await getJSON(`/api/leaderboard?period=${period}&lang=${lang}`); } catch { $("board-info").textContent = "Ranglijst laden mislukt."; return; }
     $("board-info").textContent = period === "week"
       ? `De week begint op maandag en loopt nog ${data.days_left} ${data.days_left === 1 ? "dag" : "dagen"}.`
       : "Alle XP sinds het begin.";
+    if (lang !== "all") $("board-info").textContent += ` Alleen XP in het ${langName(lang).toLowerCase()}.`;
     const list = $("board-list");
     list.replaceChildren();
     const medal = { 1: "🥇", 2: "🥈", 3: "🥉" };
+    if (!data.rows.length) {
+      const li = document.createElement("li");
+      li.className = "board-row empty";
+      li.textContent = "Nog niemand heeft XP in deze taal.";
+      list.append(li);
+    }
     data.rows.forEach((r) => {
       const li = document.createElement("li");
       li.className = "board-row" + (r.you ? " you" : "");
@@ -580,7 +605,30 @@
     });
   }
 
-  document.querySelectorAll(".seg-btn").forEach((b) => { b.onclick = () => loadBoard(b.dataset.period); });
+  document.querySelectorAll(".seg-btn").forEach((b) => { b.onclick = () => loadBoard(b.dataset.period, state.boardLang); });
+  $("board-lang").onchange = () => loadBoard(state.period, $("board-lang").value);
+
+  // ------------------------------------------------------------ taalkeuze
+  function initLanguages() {
+    const sel = $("lang-select");
+    sel.replaceChildren(...(state.config?.languages || []).map((l) => new Option(`${l.flag} ${l.name}`, l.code)));
+    sel.value = state.config?.lang || "ko";
+    sel.onchange = async () => {
+      sel.disabled = true;
+      try {
+        const res = await api("/api/lang", { method: "PUT", json: { lang: sel.value } });
+        if (!res.ok) throw new Error(res.status);
+        state.practice = null;
+        resetCard();
+        await refreshConfig();
+        await loadNext();
+        if (!$("view-lessons").hidden) renderLessons();
+      } catch (e) {
+        toast("Taal wisselen mislukt.");
+        sel.value = state.config?.lang || "ko";
+      } finally { sel.disabled = false; }
+    };
+  }
 
   // ------------------------------------------------------------ instellingen
   function setMsg(text, bad) {
@@ -697,6 +745,7 @@
   (async () => {
     try { state.config = await getJSON("/api/config"); } catch { state.config = { azure: false }; }
     initAuto();
+    initLanguages();
     await loadNext();
   })();
 })();

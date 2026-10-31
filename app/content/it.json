@@ -1,0 +1,162 @@
+{
+  "course": "Italiaans voor beginners",
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Begroetingen",
+      "note": "Italiaans spreek je bijna precies uit zoals je het schrijft, en een dubbele medeklinker hoor je echt dubbel (bijv. 'otto', 'sette'). Tegen één persoon zeg je 'tu' (informeel) of 'Lei' (formeel).",
+      "items": [
+        {"id": "1-1", "text": "Ciao", "nl": "Hallo / Doei", "tip": "'c' voor een i of e klinkt als 'tsj': 'tsjau'."},
+        {"id": "1-2", "text": "Buongiorno", "nl": "Goedendag / Goedemorgen", "tip": "'gi' klinkt als 'dzj': 'bwon-DZJOR-no'."},
+        {"id": "1-3", "text": "Buonasera", "nl": "Goedenavond"},
+        {"id": "1-4", "text": "Buonanotte", "nl": "Welterusten"},
+        {"id": "1-5", "text": "Arrivederci", "nl": "Tot ziens", "tip": "Rol de r met je tong. 'ci' klinkt als 'tsji'."},
+        {"id": "1-6", "text": "Grazie", "nl": "Dank je", "tip": "De z klinkt als 'ts': 'GRAT-sie'."},
+        {"id": "1-7", "text": "Prego", "nl": "Graag gedaan / Alstublieft"},
+        {"id": "1-8", "text": "Scusi", "nl": "Pardon (formeel)", "tip": "Tegen vrienden zeg je 'Scusa'."},
+        {"id": "1-9", "text": "Per favore", "nl": "Alstublieft / Alsjeblieft"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Jezelf voorstellen",
+      "note": "Het werkwoord 'essere' (zijn): io sono, tu sei, lui/lei è, noi siamo, voi siete, loro sono. Het woord voor 'ik' laat je vaak weg: 'Sono belga.' is genoeg.",
+      "items": [
+        {"id": "2-1", "text": "io", "nl": "ik"},
+        {"id": "2-2", "text": "Mi chiamo Thomas.", "nl": "Ik heet Thomas.", "tip": "'chi' klinkt als 'ki': 'mie KIA-mo'."},
+        {"id": "2-3", "text": "Come ti chiami?", "nl": "Hoe heet je?"},
+        {"id": "2-4", "text": "Sono belga.", "nl": "Ik ben Belg.", "tip": "'belga' blijft hetzelfde voor man en vrouw."},
+        {"id": "2-5", "text": "Sono studente.", "nl": "Ik ben student.", "tip": "Een vrouw zegt 'Sono studentessa.'"},
+        {"id": "2-6", "text": "Di dove sei?", "nl": "Waar kom je vandaan?"},
+        {"id": "2-7", "text": "Piacere", "nl": "Aangenaam"},
+        {"id": "2-8", "text": "Come stai?", "nl": "Hoe gaat het?"},
+        {"id": "2-9", "text": "Bene, grazie.", "nl": "Goed, dank je."}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Getallen 1 tot 10",
+      "note": "Een 'c' voor een e of i klinkt als 'tsj' (cinque = 'tsjinkwe'), een 'ch' klinkt als een k. De klemtoon ligt meestal op de voorlaatste lettergreep.",
+      "items": [
+        {"id": "3-1", "text": "uno", "nl": "één"},
+        {"id": "3-2", "text": "due", "nl": "twee"},
+        {"id": "3-3", "text": "tre", "nl": "drie", "tip": "Rol de r met je tong."},
+        {"id": "3-4", "text": "quattro", "nl": "vier", "tip": "'qu' klinkt als 'kw' en de dubbele t hoor je echt: 'KWAT-tro'."},
+        {"id": "3-5", "text": "cinque", "nl": "vijf", "tip": "'TSJIN-kwe'."},
+        {"id": "3-6", "text": "sei", "nl": "zes", "tip": "'sei' klinkt als 'sèj'."},
+        {"id": "3-7", "text": "sette", "nl": "zeven", "tip": "Dubbele t: 'SET-te'."},
+        {"id": "3-8", "text": "otto", "nl": "acht"},
+        {"id": "3-9", "text": "nove", "nl": "negen"},
+        {"id": "3-10", "text": "dieci", "nl": "tien", "tip": "'DJÈ-tsji'."}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Getallen verder",
+      "note": "Tientallen eindigen op -anta (trenta, quaranta). Bij 21 en 28 valt de klinker weg: 'ventuno', 'ventotto'. Bij tientallen plak je de eenheid er direct achter.",
+      "items": [
+        {"id": "4-1", "text": "undici", "nl": "elf"},
+        {"id": "4-2", "text": "dodici", "nl": "twaalf"},
+        {"id": "4-3", "text": "venti", "nl": "twintig"},
+        {"id": "4-4", "text": "ventuno", "nl": "eenentwintig"},
+        {"id": "4-5", "text": "trenta", "nl": "dertig"},
+        {"id": "4-6", "text": "quaranta", "nl": "veertig"},
+        {"id": "4-7", "text": "cinquanta", "nl": "vijftig"},
+        {"id": "4-8", "text": "cento", "nl": "honderd", "tip": "'c' klinkt als 'tsj': 'TSJEN-to'."},
+        {"id": "4-9", "text": "mille", "nl": "duizend"}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Familie en vrienden",
+      "note": "Zelfstandige naamwoorden zijn mannelijk of vrouwelijk. Lidwoorden: il / lo / l' (mannelijk) en la / l' (vrouwelijk), meervoud i / gli / le. Voor een klinker verkort 'lo' en 'la' tot l'.",
+      "items": [
+        {"id": "5-1", "text": "la madre", "nl": "de moeder"},
+        {"id": "5-2", "text": "il padre", "nl": "de vader"},
+        {"id": "5-3", "text": "il fratello", "nl": "de broer"},
+        {"id": "5-4", "text": "la sorella", "nl": "de zus"},
+        {"id": "5-5", "text": "i genitori", "nl": "de ouders", "tip": "'g' voor een e of i klinkt als 'dzj': 'dzje-ni-TO-ri'."},
+        {"id": "5-6", "text": "l'amico", "nl": "de vriend"},
+        {"id": "5-7", "text": "l'amica", "nl": "de vriendin"},
+        {"id": "5-8", "text": "la famiglia", "nl": "de familie", "tip": "'gli' klinkt als 'lj': 'fa-MIEL-ja'."},
+        {"id": "5-9", "text": "il bambino", "nl": "het kind (jongetje)", "tip": "Voor een meisje: 'la bambina'."}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Eten en drinken",
+      "note": "'Vorrei' betekent 'ik zou graag willen' en is de beleefde manier om iets te bestellen: 'Vorrei un caffè.'",
+      "items": [
+        {"id": "6-1", "text": "l'acqua", "nl": "het water", "tip": "'qu' klinkt als 'kw': 'LAK-kwa'."},
+        {"id": "6-2", "text": "il caffè", "nl": "de koffie", "tip": "De klemtoon ligt op het laatste deel: 'kaf-FÈ'."},
+        {"id": "6-3", "text": "il pane", "nl": "het brood"},
+        {"id": "6-4", "text": "la mela", "nl": "de appel"},
+        {"id": "6-5", "text": "la birra", "nl": "het bier"},
+        {"id": "6-6", "text": "il latte", "nl": "de melk"},
+        {"id": "6-7", "text": "Vorrei un caffè.", "nl": "Ik wil graag een koffie."},
+        {"id": "6-8", "text": "Il conto, per favore.", "nl": "De rekening, alstublieft."},
+        {"id": "6-9", "text": "Buon appetito!", "nl": "Smakelijk eten!"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Plaatsen",
+      "note": "'Dov'è …?' betekent 'waar is …?'. Met 'a' ga je naar een stad ('vado a Roma'), met 'in' naar een land ('vado in Belgio').",
+      "items": [
+        {"id": "7-1", "text": "la casa", "nl": "het huis"},
+        {"id": "7-2", "text": "la scuola", "nl": "de school", "tip": "'sc' voor een u klinkt als 'sk': 'SKWO-la'."},
+        {"id": "7-3", "text": "la città", "nl": "de stad", "tip": "Het accent op de laatste a betekent: klemtoon daar, 'tsjit-TA'."},
+        {"id": "7-4", "text": "la stazione", "nl": "het station", "tip": "'zio' klinkt als 'tsjo': 'sta-TSJO-ne'."},
+        {"id": "7-5", "text": "il ristorante", "nl": "het restaurant"},
+        {"id": "7-6", "text": "Dov'è la stazione?", "nl": "Waar is het station?"},
+        {"id": "7-7", "text": "a sinistra", "nl": "links"},
+        {"id": "7-8", "text": "a destra", "nl": "rechts"},
+        {"id": "7-9", "text": "sempre dritto", "nl": "rechtdoor"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Basiswerkwoorden",
+      "note": "Werkwoorden eindigen op -are, -ere of -ire. Bij 'io' wordt dat meestal -o: mangio (ik eet), vado (ik ga), ho (ik heb). Een ontkenning maak je met 'non' ervoor.",
+      "items": [
+        {"id": "8-1", "text": "mangiare", "nl": "eten", "tip": "'gi' klinkt als 'dzj': 'man-DZJA-re'."},
+        {"id": "8-2", "text": "bere", "nl": "drinken"},
+        {"id": "8-3", "text": "andare", "nl": "gaan"},
+        {"id": "8-4", "text": "venire", "nl": "komen"},
+        {"id": "8-5", "text": "fare", "nl": "doen / maken"},
+        {"id": "8-6", "text": "avere", "nl": "hebben"},
+        {"id": "8-7", "text": "Mangio il pane.", "nl": "Ik eet brood."},
+        {"id": "8-8", "text": "Ho fame.", "nl": "Ik heb honger.", "tip": "De h is stil: 'o FA-me'."}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Tijd",
+      "note": "Met 'Che ore sono?' vraag je hoe laat het is. 'Sono le tre' betekent 'het is drie uur'. Alleen bij één uur zeg je: 'È l'una.'",
+      "items": [
+        {"id": "9-1", "text": "oggi", "nl": "vandaag", "tip": "'gg' klinkt als 'dzj': 'OD-dzji'."},
+        {"id": "9-2", "text": "domani", "nl": "morgen"},
+        {"id": "9-3", "text": "ieri", "nl": "gisteren"},
+        {"id": "9-4", "text": "l'ora", "nl": "het uur"},
+        {"id": "9-5", "text": "Che ore sono?", "nl": "Hoe laat is het?", "tip": "'ch' klinkt als een k: 'ke O-re SO-no'."},
+        {"id": "9-6", "text": "Sono le tre.", "nl": "Het is drie uur."},
+        {"id": "9-7", "text": "lunedì", "nl": "maandag"},
+        {"id": "9-8", "text": "il fine settimana", "nl": "het weekend"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Handige zinnen",
+      "note": "'Parla inglese?' is de beleefde manier om te vragen of iemand Engels spreekt. Tegen vrienden zeg je 'Parli inglese?'.",
+      "items": [
+        {"id": "10-1", "text": "Non capisco.", "nl": "Ik begrijp het niet."},
+        {"id": "10-2", "text": "Può ripetere, per favore?", "nl": "Kunt u dat herhalen, alstublieft?", "tip": "'può' klinkt als 'pwò'. Rol de r in 'ripetere' met je tong."},
+        {"id": "10-3", "text": "Parla inglese?", "nl": "Spreekt u Engels?", "tip": "In 'inglese' is de g hard: 'in-GLE-ze'."},
+        {"id": "10-4", "text": "Più lentamente, per favore.", "nl": "Langzamer, alstublieft."},
+        {"id": "10-5", "text": "Quanto costa?", "nl": "Hoeveel kost het?"},
+        {"id": "10-6", "text": "Non lo so.", "nl": "Ik weet het niet."},
+        {"id": "10-7", "text": "Nessun problema.", "nl": "Geen probleem."}
+      ]
+    }
+  ]
+}

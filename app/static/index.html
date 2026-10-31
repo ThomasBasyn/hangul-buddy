@@ -20,12 +20,18 @@
 </header>
 
 <main>
+  <div class="lang-bar" id="lang-bar">
+    <label for="lang-select">Ik leer</label>
+    <select id="lang-select" aria-label="Taal die je leert"></select>
+  </div>
+
   <!-- ============ OEFENEN ============ -->
   <section id="view-practice" class="view">
     <div class="xp" aria-live="polite">
       <span class="xp-level" id="xp-level">Lv 1</span>
       <div class="xp-track" role="progressbar" aria-label="Voortgang naar volgend level"><i id="xp-fill"></i></div>
-      <span class="xp-text" id="xp-text">0 XP</span>
+      <span class="xp-text" id="xp-text" title="Totaal over alle talen">0 XP</span>
+      <span class="xp-lang" id="xp-lang" title="XP in deze taal"></span>
     </div>
     <div class="statusbar" aria-live="polite">
       <span id="st-due" title="Herhalingen vandaag">🔁 0</span>
@@ -110,6 +116,7 @@
   <!-- ============ RANGLIJST ============ -->
   <section id="view-board" class="view" hidden>
     <div class="board">
+      <select id="board-lang" aria-label="Taal van de ranglijst"></select>
       <div class="seg" role="group" aria-label="Periode">
         <button class="seg-btn active" data-period="week">Deze week</button>
         <button class="seg-btn" data-period="all">Altijd</button>

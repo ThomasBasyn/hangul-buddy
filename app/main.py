@@ -50,24 +50,49 @@ log = logging.getLogger("hangul")
 
 
 # ---------------------------------------------------------------- lesinhoud
-def load_course() -> dict:
-    course = json.loads(LESSONS_FILE.read_text(encoding="utf-8"))
-    ids = set()
+# Elke taal heeft een eigen cursus. Koreaanse item-ids blijven zoals ze waren ("1-1"); bij de andere
+# talen krijgt elk id een voorvoegsel ("de:1-1"), zodat voortgang per woord uniek blijft.
+LANGS = {
+    "ko": {"name": "Koreaans", "flag": "🇰🇷", "locale": "ko-KR", "voice": azure_speech.VOICE, "file": LESSONS_FILE},
+    "de": {"name": "Duits", "flag": "🇩🇪", "locale": "de-DE", "voice": "de-DE-KatjaNeural", "file": BASE / "content" / "de.json"},
+    "it": {"name": "Italiaans", "flag": "🇮🇹", "locale": "it-IT", "voice": "it-IT-ElsaNeural", "file": BASE / "content" / "it.json"},
+    "ja": {"name": "Japans", "flag": "🇯🇵", "locale": "ja-JP", "voice": "ja-JP-NanamiNeural", "file": BASE / "content" / "ja.json"},
+    "zh": {"name": "Chinees", "flag": "🇨🇳", "locale": "zh-CN", "voice": "zh-CN-XiaoxiaoNeural", "file": BASE / "content" / "zh.json"},
+}
+DEFAULT_LANG = "ko"
+
+
+def load_course(lang: str) -> dict:
+    meta = LANGS[lang]
+    course = json.loads(Path(meta["file"]).read_text(encoding="utf-8"))
+    seen = set()
     for order, lesson in enumerate(course["lessons"]):
         lesson["order"] = order
         for i, item in enumerate(lesson["items"]):
-            if item["id"] in ids:
-                raise SystemExit(f"Dubbel item-id in lessen: {item['id']}")
-            ids.add(item["id"])
+            if item["id"] in seen:
+                raise SystemExit(f"Dubbel item-id in lessen ({lang}): {item['id']}")
+            seen.add(item["id"])
+            if lang != DEFAULT_LANG:
+                item["id"] = f"{lang}:{item['id']}"
+            item["text"] = item.get("text") or item["ko"]
+            item["ko"] = item["text"]  # oude naam, het toestel gebruikt die nog
+            item["lang"] = lang
             item["lesson"] = lesson["id"]
             item["pos"] = i
+    course.update(lang=lang, name=meta["name"], flag=meta["flag"], locale=meta["locale"], voice=meta["voice"])
+    course["items"] = {it["id"]: it for les in course["lessons"] for it in les["items"]}
+    course["lesson_by_id"] = {les["id"]: les for les in course["lessons"]}
     return course
 
 
-COURSE = load_course()
+COURSES = {lang: load_course(lang) for lang in LANGS}
+COURSE = COURSES[DEFAULT_LANG]
 LESSONS = COURSE["lessons"]
-ITEMS = {it["id"]: it for les in LESSONS for it in les["items"]}
-LESSON_BY_ID = {les["id"]: les for les in LESSONS}
+ITEMS = {iid: it for c in COURSES.values() for iid, it in c["items"].items()}
+
+
+def course_for(user: dict) -> dict:
+    return COURSES.get(user.get("lang") or DEFAULT_LANG, COURSE)
 
 
 # ---------------------------------------------------------------- database
@@ -94,7 +119,8 @@ CREATE TABLE IF NOT EXISTS users (
     azure_key_enc TEXT,
     azure_region  TEXT,
     created       TEXT NOT NULL,
-    pw_hash       TEXT
+    pw_hash       TEXT,
+    lang          TEXT NOT NULL DEFAULT 'ko'
 );
 CREATE TABLE IF NOT EXISTS progress (
     user_id     INTEGER NOT NULL DEFAULT 1,
@@ -136,7 +162,8 @@ CREATE TABLE IF NOT EXISTS xp_log (
     day     TEXT NOT NULL,
     amount  INTEGER NOT NULL,
     reason  TEXT NOT NULL,
-    item_id TEXT
+    item_id TEXT,
+    lang    TEXT NOT NULL DEFAULT 'ko'
 );
 CREATE INDEX IF NOT EXISTS idx_xp_user_day ON xp_log(user_id, day);
 """
@@ -166,8 +193,13 @@ def init_db() -> None:
                 con.execute("ALTER TABLE review_log ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1")
         had_xp = bool(con.execute("SELECT 1 FROM sqlite_master WHERE name='xp_log'").fetchone())
         con.executescript(SCHEMA)
-        if "pw_hash" not in {r["name"] for r in con.execute("PRAGMA table_info(users)")}:
+        user_cols = {r["name"] for r in con.execute("PRAGMA table_info(users)")}
+        if "pw_hash" not in user_cols:
             con.execute("ALTER TABLE users ADD COLUMN pw_hash TEXT")
+        if "lang" not in user_cols:
+            con.execute("ALTER TABLE users ADD COLUMN lang TEXT NOT NULL DEFAULT 'ko'")
+        if "lang" not in {r["name"] for r in con.execute("PRAGMA table_info(xp_log)")}:
+            con.execute("ALTER TABLE xp_log ADD COLUMN lang TEXT NOT NULL DEFAULT 'ko'")
         if not had_xp:
             # Bestaande oefengeschiedenis telt mee: per woord per dag de beste beoordeling
             con.execute(
@@ -204,8 +236,12 @@ def ensure_owner(con) -> None:
                     (OWNER_NAME, token_hash, now_iso()))
 
 
-def progress_rows(con, user_id: int) -> dict[str, sqlite3.Row]:
-    return {r["item_id"]: r for r in con.execute("SELECT * FROM progress WHERE user_id=?", (user_id,))}
+def progress_rows(con, user_id: int, course: dict | None = None) -> dict[str, sqlite3.Row]:
+    """Voortgang van een gebruiker, desgewenst alleen voor de woorden van één cursus."""
+    rows = {r["item_id"]: r for r in con.execute("SELECT * FROM progress WHERE user_id=?", (user_id,))}
+    if course is not None:
+        rows = {k: v for k, v in rows.items() if k in course["items"]}
+    return rows
 
 
 # ---------------------------------------------------------------- gebruikersbeheer (ook voor manage.py)
@@ -300,9 +336,9 @@ def list_users() -> list[dict]:
                     "FROM users ORDER BY id")]
 
 
-def current_lesson(rows: dict) -> dict | None:
+def current_lesson(rows: dict, course: dict | None = None) -> dict | None:
     """Eerste les waarvan nog niet elk woord minstens één keer goed was."""
-    for les in LESSONS:
+    for les in (course or COURSE)["lessons"]:
         if any(not (rows.get(it["id"]) and rows[it["id"]]["learned"]) for it in les["items"]):
             return les
     return None
@@ -403,7 +439,7 @@ def azure_error(exc: httpx.HTTPError) -> HTTPException:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     init_db()
-    log.info("%d lessen, %d items geladen. Azure: %s", len(LESSONS), len(ITEMS),
+    log.info("%d talen, %d items geladen. Azure: %s", len(COURSES), len(ITEMS),
              "aan" if azure_speech.enabled() else "uit")
     yield
 
@@ -412,7 +448,7 @@ app = FastAPI(title="Hangul Buddy", lifespan=lifespan, docs_url="/api/docs", red
 
 
 def item_out(item: dict) -> dict:
-    return {k: item.get(k) for k in ("id", "ko", "rom", "nl", "tip", "lesson")}
+    return {k: item.get(k) for k in ("id", "text", "ko", "rom", "nl", "tip", "lesson", "lang")}
 
 
 def lesson_out(les: dict) -> dict:
@@ -427,15 +463,19 @@ def healthz():
 @app.get("/api/config")
 def config(user: dict = Depends(current_user)):
     creds = azure_creds(user)
+    course = course_for(user)
     return {
         "azure": creds is not None,
         "azure_source": creds[2] if creds else None,
         "user": user["name"],
         "new_per_day": NEW_PER_DAY,
         "auto": {"easy": AUTO_EASY, "retry": AUTO_RETRY},
-        "course": COURSE.get("course", ""),
-        "lessons": len(LESSONS),
-        "items": len(ITEMS),
+        "lang": course["lang"],
+        "locale": course["locale"],
+        "languages": [{"code": c, "name": m["name"], "flag": m["flag"]} for c, m in LANGS.items()],
+        "course": course.get("course", ""),
+        "lessons": len(course["lessons"]),
+        "items": len(course["items"]),
     }
 
 
@@ -443,19 +483,20 @@ def config(user: dict = Depends(current_user)):
 def next_card(extra: bool = False, user: dict = Depends(current_user)):
     """Volgend woord: eerst herhalingen die vandaag verschijnen, dan nieuwe woorden."""
     t = today().isoformat()
+    course = course_for(user)
     with db() as con:
-        rows = progress_rows(con, user["id"])
+        rows = progress_rows(con, user["id"], course)
         due = con.execute(
             """SELECT item_id, reps, learned FROM progress WHERE user_id = ? AND due <= ?
                ORDER BY COALESCE(last_review, ''), due""",
             (user["id"], t),
         ).fetchall()
-        new_today = con.execute(
-            "SELECT COUNT(*) FROM progress WHERE user_id = ? AND first_seen = ?", (user["id"], t)
-        ).fetchone()[0]
+        new_today = sum(1 for r in con.execute(
+            "SELECT item_id FROM progress WHERE user_id = ? AND first_seen = ?", (user["id"], t)
+        ) if r["item_id"] in course["items"])
 
-    due = [r for r in due if r["item_id"] in ITEMS]
-    les = current_lesson(rows)
+    due = [r for r in due if r["item_id"] in course["items"]]
+    les = current_lesson(rows, course)
     candidates = [it for it in les["items"] if it["id"] not in rows] if les else []
     capacity = len(candidates) if extra else max(0, NEW_PER_DAY - new_today)
     new_left = min(capacity, len(candidates))
@@ -463,10 +504,10 @@ def next_card(extra: bool = False, user: dict = Depends(current_user)):
     counts = {"due": len(due), "new_left": new_left, "new_today": new_today}
     if due:
         r = due[0]
-        item = ITEMS[r["item_id"]]
+        item = course["items"][r["item_id"]]
         kind = "relearn" if r["reps"] == 0 else "review"
         return {"done": False, "kind": kind, "item": item_out(item),
-                "lesson": lesson_out(LESSON_BY_ID[item["lesson"]]),
+                "lesson": lesson_out(course["lesson_by_id"][item["lesson"]]),
                 "show_note": False, "counts": counts}
     if new_left:
         item = candidates[0]
@@ -476,8 +517,9 @@ def next_card(extra: bool = False, user: dict = Depends(current_user)):
                 "counts": counts}
 
     with db() as con:
-        nxt = con.execute("SELECT MIN(due) FROM progress WHERE user_id = ? AND due > ?",
-                          (user["id"], t)).fetchone()[0]
+        upcoming = [r["due"] for r in con.execute("SELECT item_id, due FROM progress WHERE user_id = ? AND due > ?",
+                                                  (user["id"], t)) if r["item_id"] in course["items"]]
+        nxt = min(upcoming) if upcoming else None
     return {"done": True, "counts": counts, "next_due": nxt,
             "more_new_available": bool(candidates), "course_finished": les is None}
 
@@ -525,8 +567,10 @@ def grade(body: GradeIn, user: dict = Depends(current_user)):
         )
         gained = award_xp(con, user["id"], body.item_id, body.grade, body.score, is_new, t, ts)
         xp = xp_summary(con, user["id"], t)
+        lang_xp = xp_summary(con, user["id"], t, ITEMS[body.item_id]["lang"])
     return {"item_id": body.item_id, "interval": card.interval, "due": card.due.isoformat(),
-            "ease": round(card.ease, 2), "learned": bool(learned), "xp_gained": gained, "xp": xp}
+            "ease": round(card.ease, 2), "learned": bool(learned), "xp_gained": gained, "xp": xp,
+            "lang": ITEMS[body.item_id]["lang"], "lang_xp": lang_xp}
 
 
 # ---------------------------------------------------------------- uitspraak
@@ -557,7 +601,8 @@ async def assess_audio(item_id: str, request: Request, user: dict = Depends(curr
     data = await request.body()
     check_wav(data)
     try:
-        result = await azure_speech.assess(data, item["ko"], key=creds[0], region=creds[1])
+        result = await azure_speech.assess(data, item["text"], key=creds[0], region=creds[1],
+                                           locale=COURSES[item["lang"]]["locale"])
     except httpx.HTTPError as exc:
         log.error("Azure-beoordeling mislukt voor %s (%s): %s", user["name"], creds[2], exc)
         raise azure_error(exc) from exc
@@ -576,7 +621,7 @@ def assess_text(item_id: str, body: HeardIn, user: dict = Depends(current_user))
     item = ITEMS.get(item_id)
     if not item:
         raise HTTPException(404, "onbekend item")
-    score = similarity(item["ko"], body.heard)
+    score = similarity(item["text"], body.heard, item["lang"])
     return {"score": score, "heard": body.heard, "words": [], "grade": score_to_grade(score),
             "provider": "speech-recognition"}
 
@@ -592,11 +637,13 @@ async def tts(item_id: str, fmt: str = "mp3", user: dict = Depends(current_user)
     creds = azure_creds(user)
     if not creds:
         raise HTTPException(404, "geen server-TTS, gebruik de browserstem")
-    key = hashlib.sha256(f"{azure_speech.VOICE}|{item['ko']}|{fmt}".encode()).hexdigest()[:24]
+    course = COURSES[item["lang"]]
+    key = hashlib.sha256(f"{course['voice']}|{item['text']}|{fmt}".encode()).hexdigest()[:24]
     path = TTS_CACHE / f"{key}.{fmt}"
     if not path.exists():
         try:
-            audio = await azure_speech.tts(item["ko"], fmt, key=creds[0], region=creds[1])
+            audio = await azure_speech.tts(item["text"], fmt, key=creds[0], region=creds[1],
+                                           voice=course["voice"], locale=course["locale"])
         except httpx.HTTPError as exc:
             log.error("Azure-TTS mislukt voor %s (%s): %s", user["name"], creds[2], exc)
             raise azure_error(exc) from exc
@@ -610,12 +657,13 @@ async def tts(item_id: str, fmt: str = "mp3", user: dict = Depends(current_user)
 # ---------------------------------------------------------------- overzicht
 @app.get("/api/lessons")
 def lessons(user: dict = Depends(current_user)):
+    course = course_for(user)
     with db() as con:
-        rows = progress_rows(con, user["id"])
-    cur = current_lesson(rows)
-    cur_order = cur["order"] if cur else len(LESSONS)
+        rows = progress_rows(con, user["id"], course)
+    cur = current_lesson(rows, course)
+    cur_order = cur["order"] if cur else len(course["lessons"])
     out = []
-    for les in LESSONS:
+    for les in course["lessons"]:
         learned = sum(1 for it in les["items"] if rows.get(it["id"]) and rows[it["id"]]["learned"])
         out.append({
             **lesson_out(les),
@@ -637,10 +685,12 @@ def lessons(user: dict = Depends(current_user)):
 def stats(user: dict = Depends(current_user)):
     t = today()
     uid = user["id"]
+    course = course_for(user)
     with db() as con:
-        rows = progress_rows(con, uid)
+        rows = progress_rows(con, uid, course)
         streak = streak_for(con, uid, t)
         xp = xp_summary(con, uid, t)
+        lang_xp = xp_summary(con, uid, t, course["lang"])
         reviews_today = con.execute(
             "SELECT COUNT(*) FROM review_log WHERE user_id=? AND day=?", (uid, t.isoformat())
         ).fetchone()[0]
@@ -650,8 +700,10 @@ def stats(user: dict = Depends(current_user)):
         ).fetchone()[0]
     return {
         "xp": xp,
+        "lang": course["lang"],
+        "lang_xp": lang_xp,
         "learned": sum(1 for r in rows.values() if r["learned"]),
-        "total": len(ITEMS),
+        "total": len(course["items"]),
         "due_today": sum(1 for r in rows.values() if r["due"] <= t.isoformat()),
         "reviews_today": reviews_today,
         "streak": streak,
@@ -673,8 +725,8 @@ def award_xp(con, uid: int, item_id: str, grade: int, score: float | None, is_ne
                           (uid, item_id, t.isoformat())).fetchone()[0]
     gain = max(0, target - already)
     if gain:
-        con.execute("INSERT INTO xp_log (user_id, ts, day, amount, reason, item_id) VALUES (?,?,?,?,?,?)",
-                    (uid, ts, t.isoformat(), gain, "review", item_id))
+        con.execute("INSERT INTO xp_log (user_id, ts, day, amount, reason, item_id, lang) VALUES (?,?,?,?,?,?,?)",
+                    (uid, ts, t.isoformat(), gain, "review", item_id, ITEMS[item_id]["lang"]))
     return gain
 
 
@@ -687,12 +739,14 @@ def week_start(t: date) -> date:
     return t - timedelta(days=t.weekday())
 
 
-def xp_summary(con, uid: int, t: date) -> dict:
-    total = con.execute("SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=?", (uid,)).fetchone()[0]
-    week = con.execute("SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=? AND day>=?",
-                       (uid, week_start(t).isoformat())).fetchone()[0]
-    today_xp = con.execute("SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=? AND day=?",
-                           (uid, t.isoformat())).fetchone()[0]
+def xp_summary(con, uid: int, t: date, lang: str | None = None) -> dict:
+    """XP van een gebruiker: totaal over alle talen, of alleen voor één taal."""
+    where, extra = ("AND lang=?", (lang,)) if lang else ("", ())
+    total = con.execute(f"SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=? {where}", (uid, *extra)).fetchone()[0]
+    week = con.execute(f"SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=? AND day>=? {where}",
+                       (uid, week_start(t).isoformat(), *extra)).fetchone()[0]
+    today_xp = con.execute(f"SELECT COALESCE(SUM(amount),0) FROM xp_log WHERE user_id=? AND day=? {where}",
+                           (uid, t.isoformat(), *extra)).fetchone()[0]
     lvl = level_for(total)
     floor_ = 50 * lvl * (lvl - 1)
     return {"total": total, "week": week, "today": today_xp, "level": lvl,
@@ -710,18 +764,26 @@ def streak_for(con, uid: int, t: date) -> int:
 
 
 @app.get("/api/leaderboard")
-def leaderboard(period: str = "week", user: dict = Depends(current_user)):
+def leaderboard(period: str = "week", lang: str = "all", user: dict = Depends(current_user)):
+    """Ranglijst: lang=all telt alle talen samen, anders alleen de XP van die taal."""
     if period not in ("week", "all"):
         raise HTTPException(400, "period is 'week' of 'all'")
+    if lang != "all" and lang not in COURSES:
+        raise HTTPException(400, "onbekende taal")
     t = today()
     since = week_start(t).isoformat() if period == "week" else ""
+    clause, extra = ("AND lang=?", (lang,)) if lang != "all" else ("", ())
     with db() as con:
-        totals = dict(con.execute("SELECT user_id, SUM(amount) FROM xp_log GROUP BY user_id").fetchall())
-        shown = dict(con.execute("SELECT user_id, SUM(amount) FROM xp_log WHERE day>=? GROUP BY user_id", (since,)).fetchall())
+        totals = dict(con.execute(f"SELECT user_id, SUM(amount) FROM xp_log WHERE 1=1 {clause} GROUP BY user_id", extra).fetchall())
+        shown = dict(con.execute(f"SELECT user_id, SUM(amount) FROM xp_log WHERE day>=? {clause} GROUP BY user_id",
+                                 (since, *extra)).fetchall())
+        users = con.execute("SELECT id, name FROM users").fetchall()
+        # een taalranglijst toont iedereen die in die taal ooit XP heeft verdiend
+        users = [u for u in users if lang == "all" or u["id"] in totals]
         people = [{"id": u["id"], "name": u["name"], "xp": shown.get(u["id"], 0),
                    "level": level_for(totals.get(u["id"], 0)), "streak": streak_for(con, u["id"], t),
                    "you": u["id"] == user["id"]}
-                  for u in con.execute("SELECT id, name FROM users")]
+                  for u in users]
     people.sort(key=lambda p: (-p["xp"], p["name"].lower()))
     rank = 0
     for i, p in enumerate(people):
@@ -729,7 +791,34 @@ def leaderboard(period: str = "week", user: dict = Depends(current_user)):
             rank = i + 1
         p["rank"] = rank
         del p["id"]
-    return {"period": period, "since": since or None, "days_left": 7 - t.weekday() if period == "week" else None, "rows": people[:50]}
+    return {"period": period, "lang": lang, "since": since or None,
+            "days_left": 7 - t.weekday() if period == "week" else None, "rows": people[:50]}
+
+
+# ---------------------------------------------------------------- talen
+class LangIn(BaseModel):
+    lang: str = Field(max_length=5)
+
+
+@app.get("/api/languages")
+def languages(user: dict = Depends(current_user)):
+    """Alle talen met jouw voortgang en XP per taal."""
+    with db() as con:
+        rows = progress_rows(con, user["id"])
+        xp = dict(con.execute("SELECT lang, SUM(amount) FROM xp_log WHERE user_id=? GROUP BY lang", (user["id"],)).fetchall())
+    return [{"code": c, "name": course["name"], "flag": course["flag"], "current": c == (user.get("lang") or DEFAULT_LANG),
+             "learned": sum(1 for k, r in rows.items() if k in course["items"] and r["learned"]),
+             "total": len(course["items"]), "xp": xp.get(c, 0)}
+            for c, course in COURSES.items()]
+
+
+@app.put("/api/lang")
+def set_language(body: LangIn, user: dict = Depends(current_user)):
+    if body.lang not in COURSES:
+        raise HTTPException(400, "onbekende taal")
+    with db() as con:
+        con.execute("UPDATE users SET lang=? WHERE id=?", (body.lang, user["id"]))
+    return {"lang": body.lang}
 
 
 # ---------------------------------------------------------------- instellingen

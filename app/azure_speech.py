@@ -25,11 +25,12 @@ def enabled() -> bool:
 
 
 async def tts(text: str, fmt: str = "mp3", rate: str = "-10%", key: str | None = None,
-              region: str | None = None) -> bytes:
+              region: str | None = None, voice: str | None = None, locale: str | None = None) -> bytes:
     key, region = key or KEY, region or REGION
+    voice, locale = voice or VOICE, locale or LANG
     output, _ = FORMATS[fmt]
     ssml = (
-        f'<speak version="1.0" xml:lang="{LANG}"><voice name="{VOICE}">'
+        f'<speak version="1.0" xml:lang="{locale}"><voice name="{voice}">'
         f'<prosody rate="{rate}">{escape(text)}</prosody></voice></speak>'
     )
     async with httpx.AsyncClient(timeout=20) as client:
@@ -50,7 +51,8 @@ async def tts(text: str, fmt: str = "mp3", rate: str = "-10%", key: str | None =
 STT_URL = "conversation/cognitiveservices/v1"
 
 
-async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str, region: str) -> dict:
+async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str, region: str,
+                 locale: str = LANG) -> dict:
     """Uitspraakscore t.o.v. de referentietekst (Azure legt de opname langs die tekst)."""
     cfg = {
         "ReferenceText": reference,
@@ -62,7 +64,7 @@ async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str
     header = base64.b64encode(json.dumps(cfg).encode("utf-8")).decode()
     r = await client.post(
         f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
-        params={"language": LANG, "format": "detailed"},
+        params={"language": locale, "format": "detailed"},
         headers={
             "Ocp-Apim-Subscription-Key": key,
             "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
@@ -75,11 +77,11 @@ async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str
     return parse_assessment(r.json())
 
 
-async def _transcribe(client: httpx.AsyncClient, wav: bytes, key: str, region: str) -> str:
+async def _transcribe(client: httpx.AsyncClient, wav: bytes, key: str, region: str, locale: str = LANG) -> str:
     """Gewone spraakherkenning zonder referentietekst: wat Azure echt hoorde."""
     r = await client.post(
         f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
-        params={"language": LANG, "format": "simple"},
+        params={"language": locale, "format": "simple"},
         headers={
             "Ocp-Apim-Subscription-Key": key,
             "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
@@ -104,13 +106,14 @@ async def verify(key: str, region: str) -> None:
         r.raise_for_status()
 
 
-async def assess(wav: bytes, reference: str, key: str | None = None, region: str | None = None) -> dict:
+async def assess(wav: bytes, reference: str, key: str | None = None, region: str | None = None,
+                 locale: str | None = None) -> dict:
     """Uitspraakbeoordeling. Verwacht 16 kHz, 16-bit, mono WAV."""
-    key, region = key or KEY, region or REGION
+    key, region, locale = key or KEY, region or REGION, locale or LANG
     async with httpx.AsyncClient(timeout=30) as client:
         scored, heard = await asyncio.gather(
-            _score(client, wav, reference, key, region),
-            _transcribe(client, wav, key, region),
+            _score(client, wav, reference, key, region, locale),
+            _transcribe(client, wav, key, region, locale),
             return_exceptions=True,
         )
     if isinstance(scored, BaseException):

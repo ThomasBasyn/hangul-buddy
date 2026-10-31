@@ -1,0 +1,162 @@
+{
+  "course": "Japans voor beginners",
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Begroetingen",
+      "note": "Japans schrijf je met drie schriften: hiragana, katakana en kanji. Hier zie je de gewone schrijfwijze, met de romaji (letters) eronder. Elke lettergreep duurt ongeveer even lang. Een klinker met streepje (ō, ū) is dubbel zo lang.",
+      "items": [
+        {"id": "1-1", "text": "こんにちは", "rom": "konnichiwa", "nl": "Goedendag", "tip": "は wordt hier als 'wa' uitgesproken, niet als 'ha'."},
+        {"id": "1-2", "text": "おはようございます", "rom": "ohayō gozaimasu", "nl": "Goedemorgen (beleefd)"},
+        {"id": "1-3", "text": "こんばんは", "rom": "konbanwa", "nl": "Goedenavond", "tip": "Ook hier wordt は als 'wa' gelezen."},
+        {"id": "1-4", "text": "おやすみなさい", "rom": "oyasuminasai", "nl": "Welterusten"},
+        {"id": "1-5", "text": "ありがとうございます", "rom": "arigatō gozaimasu", "nl": "Dank u wel", "tip": "'tō' heeft een lange o: houd de klank dubbel zo lang aan."},
+        {"id": "1-6", "text": "すみません", "rom": "sumimasen", "nl": "Pardon / Sorry / Neemt u me niet kwalijk"},
+        {"id": "1-7", "text": "はい", "rom": "hai", "nl": "Ja"},
+        {"id": "1-8", "text": "いいえ", "rom": "iie", "nl": "Nee", "tip": "Zeg i-i-e: de eerste klinker is lang, de tweede is kort."},
+        {"id": "1-9", "text": "さようなら", "rom": "sayōnara", "nl": "Tot ziens", "tip": "Wordt vooral gebruikt als je elkaar lange tijd niet ziet."}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Jezelf voorstellen",
+      "note": "Een Japanse zin eindigt op het werkwoord. です (desu) betekent 'is / ben / zijn' (beleefd). は (wa) markeert het onderwerp: 'watashi wa gakusei desu' = 'ik ben student'. 'Ik' laat je vaak weg als het duidelijk is. Met か (ka) aan het eind van de zin maak je er een vraag van.",
+      "items": [
+        {"id": "2-1", "text": "私", "rom": "watashi", "nl": "ik"},
+        {"id": "2-2", "text": "私はトーマスです", "rom": "watashi wa Tōmasu desu", "nl": "Ik ben Thomas", "tip": "'desu' klinkt als 'des': de u aan het eind is bijna stil."},
+        {"id": "2-3", "text": "お名前は？", "rom": "onamae wa?", "nl": "Hoe heet u?"},
+        {"id": "2-4", "text": "学生です", "rom": "gakusei desu", "nl": "Ik ben student"},
+        {"id": "2-5", "text": "ベルギーから来ました", "rom": "Berugī kara kimashita", "nl": "Ik kom uit België"},
+        {"id": "2-6", "text": "はじめまして", "rom": "hajimemashite", "nl": "Aangenaam (bij de eerste ontmoeting)"},
+        {"id": "2-7", "text": "よろしくお願いします", "rom": "yoroshiku onegai shimasu", "nl": "Fijn kennis te maken / Ik reken op u", "tip": "Een vaste uitdrukking die je na een introductie zegt."},
+        {"id": "2-8", "text": "お元気ですか？", "rom": "ogenki desu ka?", "nl": "Hoe gaat het met u?"},
+        {"id": "2-9", "text": "元気です", "rom": "genki desu", "nl": "Het gaat goed"}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Getallen 1 tot 10",
+      "note": "Voor 4 en 7 bestaan twee lezingen: shi/yon en shichi/nana. Meestal gebruik je 'yon' en 'nana', omdat 'shi' ook 'dood' betekent. De tekens zelf zijn kanji.",
+      "items": [
+        {"id": "3-1", "text": "一", "rom": "ichi", "nl": "1"},
+        {"id": "3-2", "text": "二", "rom": "ni", "nl": "2"},
+        {"id": "3-3", "text": "三", "rom": "san", "nl": "3"},
+        {"id": "3-4", "text": "四", "rom": "yon", "nl": "4", "tip": "Ook 'shi', maar dat klinkt als het woord voor 'dood'."},
+        {"id": "3-5", "text": "五", "rom": "go", "nl": "5"},
+        {"id": "3-6", "text": "六", "rom": "roku", "nl": "6", "tip": "De Japanse r klinkt tussen een r en een l in: tik met je tong kort tegen je gehemelte."},
+        {"id": "3-7", "text": "七", "rom": "nana", "nl": "7", "tip": "Ook 'shichi'."},
+        {"id": "3-8", "text": "八", "rom": "hachi", "nl": "8"},
+        {"id": "3-9", "text": "九", "rom": "kyū", "nl": "9", "tip": "Ook 'ku'. De ū is lang."},
+        {"id": "3-10", "text": "十", "rom": "jū", "nl": "10", "tip": "De ū is lang: 'dzjoe-oe'."}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Getallen verder",
+      "note": "Japanse getallen zijn heel regelmatig: 11 is 'tien-één' (十一), 20 is 'twee-tien' (二十), 30 is 'drie-tien' (三十). 100 is hyaku, 1000 is sen en 10.000 is man.",
+      "items": [
+        {"id": "4-1", "text": "十一", "rom": "jūichi", "nl": "11"},
+        {"id": "4-2", "text": "十二", "rom": "jūni", "nl": "12"},
+        {"id": "4-3", "text": "二十", "rom": "nijū", "nl": "20"},
+        {"id": "4-4", "text": "二十一", "rom": "nijūichi", "nl": "21"},
+        {"id": "4-5", "text": "三十", "rom": "sanjū", "nl": "30"},
+        {"id": "4-6", "text": "五十", "rom": "gojū", "nl": "50"},
+        {"id": "4-7", "text": "百", "rom": "hyaku", "nl": "100"},
+        {"id": "4-8", "text": "千", "rom": "sen", "nl": "1000"},
+        {"id": "4-9", "text": "万", "rom": "man", "nl": "10.000", "tip": "Japanners tellen in tienduizendtallen: 100.000 is 'tien man' (十万)."}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Familie en vrienden",
+      "note": "Voor de familie van een ander (en om je eigen familie aan te spreken) gebruik je eerbiedige woorden zoals お母さん. Over je eigen moeder praat je tegen anderen als 'haha'. Hier leer je de woorden die je zelf het meest gebruikt.",
+      "items": [
+        {"id": "5-1", "text": "お母さん", "rom": "okāsan", "nl": "moeder", "tip": "Lange ā: houd de klank dubbel zo lang aan."},
+        {"id": "5-2", "text": "お父さん", "rom": "otōsan", "nl": "vader"},
+        {"id": "5-3", "text": "お兄さん", "rom": "onīsan", "nl": "oudere broer"},
+        {"id": "5-4", "text": "お姉さん", "rom": "onēsan", "nl": "oudere zus"},
+        {"id": "5-5", "text": "弟", "rom": "otōto", "nl": "jongere broer"},
+        {"id": "5-6", "text": "妹", "rom": "imōto", "nl": "jongere zus"},
+        {"id": "5-7", "text": "友達", "rom": "tomodachi", "nl": "vriend / vriendin"},
+        {"id": "5-8", "text": "家族", "rom": "kazoku", "nl": "familie"},
+        {"id": "5-9", "text": "子供", "rom": "kodomo", "nl": "kind"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Eten en drinken",
+      "note": "Met 'をください' (o kudasai) vraag je om iets: 'mizu o kudasai' = 'water, alstublieft'. を markeert het voorwerp en spreek je uit als 'o'.",
+      "items": [
+        {"id": "6-1", "text": "水", "rom": "mizu", "nl": "water"},
+        {"id": "6-2", "text": "コーヒー", "rom": "kōhī", "nl": "koffie", "tip": "Katakana: het streepje ー betekent een lange klinker."},
+        {"id": "6-3", "text": "お茶", "rom": "ocha", "nl": "thee"},
+        {"id": "6-4", "text": "ご飯", "rom": "gohan", "nl": "rijst / maaltijd"},
+        {"id": "6-5", "text": "パン", "rom": "pan", "nl": "brood"},
+        {"id": "6-6", "text": "りんご", "rom": "ringo", "nl": "appel"},
+        {"id": "6-7", "text": "水をください", "rom": "mizu o kudasai", "nl": "Water, alstublieft"},
+        {"id": "6-8", "text": "いただきます", "rom": "itadakimasu", "nl": "Smakelijk eten (zeg je voor het eten)"},
+        {"id": "6-9", "text": "ごちそうさまでした", "rom": "gochisōsama deshita", "nl": "Bedankt voor het eten (zeg je erna)"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Plaatsen",
+      "note": "Met 'どこですか' (doko desu ka) vraag je 'waar is …?': 'eki wa doko desu ka?' = 'waar is het station?'. Met に (ni) geef je een bestemming aan: 'gakkō ni ikimasu' = 'ik ga naar school'.",
+      "items": [
+        {"id": "7-1", "text": "家", "rom": "ie", "nl": "huis"},
+        {"id": "7-2", "text": "学校", "rom": "gakkō", "nl": "school", "tip": "De dubbele k: laat een korte pauze vallen voor de k."},
+        {"id": "7-3", "text": "駅", "rom": "eki", "nl": "station"},
+        {"id": "7-4", "text": "レストラン", "rom": "resutoran", "nl": "restaurant"},
+        {"id": "7-5", "text": "トイレ", "rom": "toire", "nl": "toilet"},
+        {"id": "7-6", "text": "駅はどこですか？", "rom": "eki wa doko desu ka?", "nl": "Waar is het station?"},
+        {"id": "7-7", "text": "左", "rom": "hidari", "nl": "links"},
+        {"id": "7-8", "text": "右", "rom": "migi", "nl": "rechts"},
+        {"id": "7-9", "text": "まっすぐ", "rom": "massugu", "nl": "rechtdoor"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Basiswerkwoorden",
+      "note": "Beleefde werkwoorden eindigen op -masu: tabemasu (eet), nomimasu (drinkt), ikimasu (gaat). Dezelfde vorm geldt voor ik, jij, hij en wij. Een ontkenning eindigt op -masen.",
+      "items": [
+        {"id": "8-1", "text": "食べます", "rom": "tabemasu", "nl": "eten"},
+        {"id": "8-2", "text": "飲みます", "rom": "nomimasu", "nl": "drinken"},
+        {"id": "8-3", "text": "行きます", "rom": "ikimasu", "nl": "gaan"},
+        {"id": "8-4", "text": "来ます", "rom": "kimasu", "nl": "komen"},
+        {"id": "8-5", "text": "します", "rom": "shimasu", "nl": "doen"},
+        {"id": "8-6", "text": "見ます", "rom": "mimasu", "nl": "kijken"},
+        {"id": "8-7", "text": "水を飲みます", "rom": "mizu o nomimasu", "nl": "Ik drink water"},
+        {"id": "8-8", "text": "ご飯を食べます", "rom": "gohan o tabemasu", "nl": "Ik eet (rijst / een maaltijd)"}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Tijd",
+      "note": "時 (ji) betekent 'uur': 三時 (sanji) is drie uur. Let op de uitzonderingen: 4 uur is 'yoji', 7 uur is 'shichiji' en 9 uur is 'kuji'.",
+      "items": [
+        {"id": "9-1", "text": "今日", "rom": "kyō", "nl": "vandaag"},
+        {"id": "9-2", "text": "明日", "rom": "ashita", "nl": "morgen"},
+        {"id": "9-3", "text": "昨日", "rom": "kinō", "nl": "gisteren"},
+        {"id": "9-4", "text": "今", "rom": "ima", "nl": "nu"},
+        {"id": "9-5", "text": "何時ですか？", "rom": "nanji desu ka?", "nl": "Hoe laat is het?"},
+        {"id": "9-6", "text": "三時です", "rom": "sanji desu", "nl": "Het is drie uur"},
+        {"id": "9-7", "text": "月曜日", "rom": "getsuyōbi", "nl": "maandag"},
+        {"id": "9-8", "text": "週末", "rom": "shūmatsu", "nl": "weekend"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Handige zinnen",
+      "note": "Met 'わかりません' zeg je dat je het niet begrijpt, en 'もう一度お願いします' vraagt om herhaling. Het woord お願いします (onegai shimasu) maakt een verzoek beleefd.",
+      "items": [
+        {"id": "10-1", "text": "わかりません", "rom": "wakarimasen", "nl": "Ik begrijp het niet"},
+        {"id": "10-2", "text": "もう一度お願いします", "rom": "mō ichido onegai shimasu", "nl": "Nog een keer, alstublieft"},
+        {"id": "10-3", "text": "英語を話せますか？", "rom": "eigo o hanasemasu ka?", "nl": "Spreekt u Engels?"},
+        {"id": "10-4", "text": "ゆっくりお願いします", "rom": "yukkuri onegai shimasu", "nl": "Langzamer, alstublieft"},
+        {"id": "10-5", "text": "いくらですか？", "rom": "ikura desu ka?", "nl": "Hoeveel kost het?"},
+        {"id": "10-6", "text": "大丈夫です", "rom": "daijōbu desu", "nl": "Het is goed / Geen probleem"},
+        {"id": "10-7", "text": "お願いします", "rom": "onegai shimasu", "nl": "Alstublieft (bij een verzoek)"}
+      ]
+    }
+  ]
+}
