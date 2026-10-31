@@ -275,14 +275,27 @@
     if (result) await autoJudge(card, result);
   }
 
-  // Automatisch beoordelen (alleen bij gewone herhalingen, niet bij vrij oefenen):
+  // Automatisch beoordelen. Bij gewone herhalingen:
   //  >= easy  : Makkelijk, volgend woord (heb je eerder al Moeilijk gekregen: gewoon door)
   //  >= retry : niets opgeslagen, opnieuw proberen
   //  <  retry : meteen Moeilijk opgeslagen, blijven tot je easy haalt
   async function autoJudge(card, r) {
-    if (state.practice || !autoOn() || !card || state.card !== card) return;
+    if (!autoOn() || !card || state.card !== card) return;
     const { easy, retry } = thresholds();
     const say = (text, cls) => $("feedback").insertAdjacentHTML("beforeend", `<div class="auto-msg ${cls}">${text}</div>`);
+    if (state.practice) {
+      // Vrij oefenen: nooit iets opslaan, wel automatisch door vanaf easy
+      if (r.score >= easy) {
+        say("✅ Gelukt! Volgend woord…", "ok");
+        state.busy = true;
+        await sleep(1600);
+        state.busy = false;
+        if (state.practice && state.card === card) nextPractice();
+      } else {
+        say(`Probeer opnieuw voor ${easy}%, of ga naar het volgende woord.`, "mid");
+      }
+      return;
+    }
     state.busy = true;
     try {
       if (r.score >= easy) {
