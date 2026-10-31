@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14161c">
+<title>Hangul Buddy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo" aria-hidden="true">한</span> Hangul Buddy</div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" class="tab active" data-view="practice" aria-selected="true">Oefenen</button>
+    <button role="tab" class="tab" data-view="lessons" aria-selected="false">Lessen</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ OEFENEN ============ -->
+  <section id="view-practice" class="view">
+    <div class="statusbar" aria-live="polite">
+      <span id="st-due" title="Herhalingen vandaag">🔁 0</span>
+      <span id="st-new" title="Nieuwe woorden over vandaag">✨ 0</span>
+      <span id="st-streak" title="Dagen op rij">🔥 0</span>
+      <span id="st-learned" title="Geleerde woorden">📚 0/0</span>
+    </div>
+
+    <!-- Het 'toestel': scherm + drie knoppen, zoals de ESP32-versie -->
+    <div class="device">
+      <div class="screen" id="screen">
+        <div class="screen-top">
+          <span class="badge" id="kind-badge">…</span>
+          <span class="lesson-name" id="lesson-name"></span>
+        </div>
+        <div class="word" id="word" lang="ko">불러오는 중…</div>
+        <div class="reveal" id="reveal" hidden>
+          <div class="rom" id="rom"></div>
+          <div class="nl" id="nl"></div>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <div class="feedback" id="feedback" hidden aria-live="polite"></div>
+      </div>
+      <div class="buttons">
+        <button class="hw" id="btn-listen" aria-label="Luister naar de uitspraak (spatie)">
+          <span class="hw-icon">🔊</span><span class="hw-label">Luister</span>
+        </button>
+        <button class="hw" id="btn-speak" aria-label="Spreek het woord in (R)">
+          <span class="hw-icon">🎙️</span><span class="hw-label">Spreek</span>
+        </button>
+        <button class="hw" id="btn-reveal" aria-label="Toon de vertaling (Enter)">
+          <span class="hw-icon">👁️</span><span class="hw-label">Vertaling</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grades" id="grades" hidden>
+      <p class="grades-q">Hoe ging het?</p>
+      <div class="grade-row">
+        <button class="grade g-again" data-grade="1">Opnieuw<small>1</small></button>
+        <button class="grade g-hard" data-grade="3">Moeilijk<small>2</small></button>
+        <button class="grade g-good" data-grade="4">Goed<small>3</small></button>
+        <button class="grade g-easy" data-grade="5">Makkelijk<small>4</small></button>
+      </div>
+    </div>
+
+    <div class="note-card" id="note-card" hidden>
+      <div class="note-head">📘 <strong id="note-title"></strong></div>
+      <p id="note-text"></p>
+      <button class="link" id="note-close">Begrepen</button>
+    </div>
+
+    <div class="done" id="done" hidden>
+      <div class="done-emoji">🎉</div>
+      <h2>Klaar voor vandaag!</h2>
+      <p id="done-text"></p>
+      <button class="primary" id="btn-extra" hidden>Nog een paar nieuwe woorden</button>
+    </div>
+
+    <p class="hint">Sneltoetsen: <kbd>Spatie</kbd> luister · <kbd>R</kbd> spreek · <kbd>Enter</kbd> vertaling · <kbd>1</kbd>–<kbd>4</kbd> beoordelen</p>
+  </section>
+
+  <!-- ============ LESSEN ============ -->
+  <section id="view-lessons" class="view" hidden>
+    <div id="lessons"></div>
+  </section>
+</main>
+
+<dialog id="token-dialog">
+  <form method="dialog" id="token-form">
+    <h3>Toegangscode</h3>
+    <p>Deze server is beveiligd. Vul de APP_TOKEN in.</p>
+    <input type="password" id="token-input" autocomplete="current-password" required>
+    <button class="primary" type="submit">Opslaan</button>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

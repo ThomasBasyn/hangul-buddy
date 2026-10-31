@@ -1,0 +1,13 @@
+services:
+  hangul-buddy:
+    build: ./app
+    container_name: hangul-buddy
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3310:8000"
+    volumes:
+      - hangul-data:/data
+
+volumes:
+  hangul-data:

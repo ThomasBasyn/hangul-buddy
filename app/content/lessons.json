@@ -1,0 +1,161 @@
+{
+  "course": "Koreaans voor beginners",
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Begroetingen",
+      "note": "In het Koreaans hangt je taal af van met wie je praat. Vormen op -요 en -니다 zijn beleefd: gebruik die met onbekenden, in winkels en tegen ouderen. -니다 klinkt nog formeler dan -요.",
+      "items": [
+        {"id": "1-1", "ko": "안녕하세요", "rom": "annyeonghaseyo", "nl": "Hallo (beleefd)"},
+        {"id": "1-2", "ko": "감사합니다", "rom": "gamsahamnida", "nl": "Dank u", "tip": "합니다 klinkt als 함니다: een ㅂ vóór een ㄴ wordt een m-klank."},
+        {"id": "1-3", "ko": "네", "rom": "ne", "nl": "Ja"},
+        {"id": "1-4", "ko": "아니요", "rom": "aniyo", "nl": "Nee"},
+        {"id": "1-5", "ko": "죄송합니다", "rom": "joesonghamnida", "nl": "Het spijt me (formeel)"},
+        {"id": "1-6", "ko": "괜찮아요", "rom": "gwaenchanayo", "nl": "Het is oké / geen probleem", "tip": "De ㅎ in 찮 is stil: je zegt 괜차나요."},
+        {"id": "1-7", "ko": "반갑습니다", "rom": "bangapseumnida", "nl": "Aangenaam (kennis te maken)"},
+        {"id": "1-8", "ko": "안녕히 가세요", "rom": "annyeonghi gaseyo", "nl": "Tot ziens (tegen wie vertrekt)"},
+        {"id": "1-9", "ko": "안녕히 계세요", "rom": "annyeonghi gyeseyo", "nl": "Tot ziens (tegen wie blijft)"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Jezelf voorstellen",
+      "note": "은/는 markeert het onderwerp waarover je iets zegt ('wat mij betreft…'): 는 na een klinker (저는), 은 na een medeklinker (이름은). 'X zijn' wordt 이에요 na een medeklinker (학생이에요) en 예요 na een klinker (토마스예요).",
+      "items": [
+        {"id": "2-1", "ko": "저", "rom": "jeo", "nl": "ik (beleefd)"},
+        {"id": "2-2", "ko": "이름", "rom": "ireum", "nl": "naam"},
+        {"id": "2-3", "ko": "학생", "rom": "haksaeng", "nl": "student"},
+        {"id": "2-4", "ko": "사람", "rom": "saram", "nl": "persoon, mens"},
+        {"id": "2-5", "ko": "한국", "rom": "hanguk", "nl": "Korea"},
+        {"id": "2-6", "ko": "벨기에", "rom": "belgie", "nl": "België"},
+        {"id": "2-7", "ko": "저는 학생이에요", "rom": "jeoneun haksaengieyo", "nl": "Ik ben student"},
+        {"id": "2-8", "ko": "제 이름은 토마스예요", "rom": "je ireumeun tomaseuyeyo", "nl": "Mijn naam is Thomas"},
+        {"id": "2-9", "ko": "저는 벨기에 사람이에요", "rom": "jeoneun belgie saramieyo", "nl": "Ik ben Belg"}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Getallen (Sino-Koreaans)",
+      "note": "Koreaans heeft twee getallenreeksen. De Sino-Koreaanse (uit het Chinees) gebruik je voor prijzen, data, telefoonnummers en minuten. 11 = 십일 (tien-één), 20 = 이십 (twee-tien).",
+      "items": [
+        {"id": "3-1", "ko": "일", "rom": "il", "nl": "1"},
+        {"id": "3-2", "ko": "이", "rom": "i", "nl": "2"},
+        {"id": "3-3", "ko": "삼", "rom": "sam", "nl": "3"},
+        {"id": "3-4", "ko": "사", "rom": "sa", "nl": "4"},
+        {"id": "3-5", "ko": "오", "rom": "o", "nl": "5"},
+        {"id": "3-6", "ko": "육", "rom": "yuk", "nl": "6"},
+        {"id": "3-7", "ko": "칠", "rom": "chil", "nl": "7"},
+        {"id": "3-8", "ko": "팔", "rom": "pal", "nl": "8"},
+        {"id": "3-9", "ko": "구", "rom": "gu", "nl": "9"},
+        {"id": "3-10", "ko": "십", "rom": "sip", "nl": "10"}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Getallen (eigen Koreaans)",
+      "note": "De eigen Koreaanse getallen gebruik je om te tellen (aantallen, leeftijd) en voor de uren op de klok. Voor een telwoord veranderen sommige: 하나 → 한, 둘 → 두, 셋 → 세, 넷 → 네 (한 개 = één stuk).",
+      "items": [
+        {"id": "4-1", "ko": "하나", "rom": "hana", "nl": "1"},
+        {"id": "4-2", "ko": "둘", "rom": "dul", "nl": "2"},
+        {"id": "4-3", "ko": "셋", "rom": "set", "nl": "3"},
+        {"id": "4-4", "ko": "넷", "rom": "net", "nl": "4"},
+        {"id": "4-5", "ko": "다섯", "rom": "daseot", "nl": "5"},
+        {"id": "4-6", "ko": "여섯", "rom": "yeoseot", "nl": "6"},
+        {"id": "4-7", "ko": "일곱", "rom": "ilgop", "nl": "7"},
+        {"id": "4-8", "ko": "여덟", "rom": "yeodeol", "nl": "8"},
+        {"id": "4-9", "ko": "아홉", "rom": "ahop", "nl": "9"},
+        {"id": "4-10", "ko": "열", "rom": "yeol", "nl": "10"}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Familie en vrienden",
+      "note": "Bij broers en zussen hangt het woord af van wie er spreekt: een man zegt 형 (oudere broer) en 누나 (oudere zus), een vrouw zegt 오빠 en 언니. 동생 is een jongere broer of zus, voor iedereen.",
+      "items": [
+        {"id": "5-1", "ko": "가족", "rom": "gajok", "nl": "familie, gezin"},
+        {"id": "5-2", "ko": "엄마", "rom": "eomma", "nl": "mama"},
+        {"id": "5-3", "ko": "아빠", "rom": "appa", "nl": "papa"},
+        {"id": "5-4", "ko": "형", "rom": "hyeong", "nl": "oudere broer (gezegd door een man)"},
+        {"id": "5-5", "ko": "누나", "rom": "nuna", "nl": "oudere zus (gezegd door een man)"},
+        {"id": "5-6", "ko": "동생", "rom": "dongsaeng", "nl": "jongere broer of zus"},
+        {"id": "5-7", "ko": "친구", "rom": "chingu", "nl": "vriend(in)"},
+        {"id": "5-8", "ko": "여자친구", "rom": "yeojachingu", "nl": "vriendin (lief)"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Eten en drinken",
+      "note": "주세요 betekent 'geef me alstublieft'. Zet het achter wat je wil: 물 주세요 = water, alstublieft. Zo bestel je bijna alles.",
+      "items": [
+        {"id": "6-1", "ko": "물", "rom": "mul", "nl": "water"},
+        {"id": "6-2", "ko": "커피", "rom": "keopi", "nl": "koffie"},
+        {"id": "6-3", "ko": "밥", "rom": "bap", "nl": "rijst, maaltijd"},
+        {"id": "6-4", "ko": "김치", "rom": "gimchi", "nl": "kimchi"},
+        {"id": "6-5", "ko": "고기", "rom": "gogi", "nl": "vlees"},
+        {"id": "6-6", "ko": "빵", "rom": "ppang", "nl": "brood"},
+        {"id": "6-7", "ko": "맛있어요", "rom": "masisseoyo", "nl": "Het is lekker", "tip": "Je zegt 마시써요: de ㅆ schuift door naar de volgende lettergreep."},
+        {"id": "6-8", "ko": "주세요", "rom": "juseyo", "nl": "Geef me alstublieft"},
+        {"id": "6-9", "ko": "물 주세요", "rom": "mul juseyo", "nl": "Water, alstublieft"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Plaatsen",
+      "note": "어디예요? betekent 'waar is het?'. Met 이/가 (onderwerp) ervoor vraag je naar iets specifieks: 화장실이 어디예요? = Waar is het toilet? 이 na een medeklinker, 가 na een klinker.",
+      "items": [
+        {"id": "7-1", "ko": "집", "rom": "jip", "nl": "huis, thuis"},
+        {"id": "7-2", "ko": "학교", "rom": "hakgyo", "nl": "school"},
+        {"id": "7-3", "ko": "회사", "rom": "hoesa", "nl": "bedrijf, kantoor"},
+        {"id": "7-4", "ko": "식당", "rom": "sikdang", "nl": "restaurant"},
+        {"id": "7-5", "ko": "화장실", "rom": "hwajangsil", "nl": "toilet"},
+        {"id": "7-6", "ko": "역", "rom": "yeok", "nl": "station"},
+        {"id": "7-7", "ko": "어디예요?", "rom": "eodiyeyo?", "nl": "Waar is het?"},
+        {"id": "7-8", "ko": "화장실이 어디예요?", "rom": "hwajangsiri eodiyeyo?", "nl": "Waar is het toilet?"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Basiswerkwoorden",
+      "note": "De beleefde tegenwoordige tijd maak je met -아요/-어요. Is de laatste klinker van de stam ㅏ of ㅗ, dan -아요 (가다 → 가요); anders -어요 (먹다 → 먹어요). 하다 wordt altijd 해요. Het onderwerp laat je vaak weg: 먹어요 = ik eet / jij eet / …",
+      "items": [
+        {"id": "8-1", "ko": "가요", "rom": "gayo", "nl": "(ik) ga"},
+        {"id": "8-2", "ko": "와요", "rom": "wayo", "nl": "(ik) kom"},
+        {"id": "8-3", "ko": "먹어요", "rom": "meogeoyo", "nl": "(ik) eet"},
+        {"id": "8-4", "ko": "마셔요", "rom": "masyeoyo", "nl": "(ik) drink"},
+        {"id": "8-5", "ko": "봐요", "rom": "bwayo", "nl": "(ik) kijk, zie"},
+        {"id": "8-6", "ko": "해요", "rom": "haeyo", "nl": "(ik) doe"},
+        {"id": "8-7", "ko": "공부해요", "rom": "gongbuhaeyo", "nl": "(ik) studeer"},
+        {"id": "8-8", "ko": "좋아해요", "rom": "joahaeyo", "nl": "(ik) hou van, vind leuk", "tip": "De ㅎ in 좋 valt weg: je zegt 조아해요."}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Tijd",
+      "note": "Tijdswoorden staan meestal vooraan in de zin: 오늘 학교에 가요 = Vandaag ga ik naar school. 에 betekent hier 'naar'.",
+      "items": [
+        {"id": "9-1", "ko": "오늘", "rom": "oneul", "nl": "vandaag"},
+        {"id": "9-2", "ko": "내일", "rom": "naeil", "nl": "morgen"},
+        {"id": "9-3", "ko": "어제", "rom": "eoje", "nl": "gisteren"},
+        {"id": "9-4", "ko": "지금", "rom": "jigeum", "nl": "nu"},
+        {"id": "9-5", "ko": "아침", "rom": "achim", "nl": "ochtend, ontbijt"},
+        {"id": "9-6", "ko": "저녁", "rom": "jeonyeok", "nl": "avond, avondeten"},
+        {"id": "9-7", "ko": "주말", "rom": "jumal", "nl": "weekend"},
+        {"id": "9-8", "ko": "오늘 학교에 가요", "rom": "oneul hakgyoe gayo", "nl": "Vandaag ga ik naar school"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Handige zinnen",
+      "note": "-아/어 주세요 maakt van een werkwoord een beleefd verzoek: 말하다 (zeggen) → 말해 주세요 = zeg het alstublieft. Ideaal als je iets niet verstaat.",
+      "items": [
+        {"id": "10-1", "ko": "얼마예요?", "rom": "eolmayeyo?", "nl": "Hoeveel kost het?"},
+        {"id": "10-2", "ko": "이거 주세요", "rom": "igeo juseyo", "nl": "Dit, alstublieft"},
+        {"id": "10-3", "ko": "한국어를 공부해요", "rom": "hangugeoreul gongbuhaeyo", "nl": "Ik studeer Koreaans"},
+        {"id": "10-4", "ko": "천천히 말해 주세요", "rom": "cheoncheonhi malhae juseyo", "nl": "Spreek alstublieft langzaam"},
+        {"id": "10-5", "ko": "다시 한 번 말해 주세요", "rom": "dasi han beon malhae juseyo", "nl": "Zeg het alstublieft nog eens"},
+        {"id": "10-6", "ko": "모르겠어요", "rom": "moreugesseoyo", "nl": "Ik weet het niet / begrijp het niet"},
+        {"id": "10-7", "ko": "알겠어요", "rom": "algesseoyo", "nl": "Begrepen"}
+      ]
+    }
+  ]
+}
