@@ -249,3 +249,6 @@ dialog input { width: 100%; padding: 8px 10px; margin: 8px 0 12px; border-radius
 .board-row.empty { display: block; text-align: center; color: var(--muted); }
 .word[lang="ja"], .word[lang="zh"] { font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif; }
 .sub { color: var(--screen-dim); font-size: 12px; margin-top: 2px; }
+.settings .check { display: flex; gap: 10px; align-items: flex-start; }
+.settings .check input { width: auto; margin-top: 4px; }
+.settings .check small { display: block; color: var(--muted); font-size: .8rem; }

@@ -18,6 +18,9 @@
   const thresholds = () => state.config?.auto || { easy: 90, retry: 80 };
   const autoOn = () => store.get("hb_auto") === "1";
   const manualGrading = () => !state.practice && !autoOn();
+  // Slim opnemen: stopt vanzelf kort na je laatste woord en knipt stilte weg (bespaart ook Azure-tijd)
+  const VAD = { minRms: 0.012, startChunks: 2, silenceMs: 800, noSpeechMs: 4500, maxMs: 8000, preChunks: 4, postChunks: 4 };
+  const vadOn = () => store.get("hb_vad") !== "0";
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const shuffle = (a) => {
     const out = [...a];
@@ -232,15 +235,36 @@
     const src = ctx.createMediaStreamSource(stream);
     const proc = ctx.createScriptProcessor(4096, 1, 1);
     const chunks = [];
-    proc.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    const chunkMs = (4096 / ctx.sampleRate) * 1000;
+    const rmsOf = (a) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * a[i]; return Math.sqrt(s / a.length); };
+    let noise = Infinity, calibrated = 0, above = 0, first = -1, last = -1, silentFor = 0;
+    const finish = () => state.recording?.stop({ auto: true });
+    proc.onaudioprocess = (e) => {
+      const buf = new Float32Array(e.inputBuffer.getChannelData(0));
+      chunks.push(buf);
+      if (!vadOn()) return;
+      const idx = chunks.length - 1;
+      const r = rmsOf(buf);
+      if (calibrated < 3) { noise = Math.min(noise, r); calibrated++; return; } // eerste ±250 ms: omgevingsgeluid
+      if (r > Math.max(VAD.minRms, noise * 2.5)) {
+        above++;
+        silentFor = 0;
+        if (first < 0 && above >= VAD.startChunks) { first = idx - VAD.startChunks + 1; setSpeakLabel("Ik hoor je"); }
+        if (first >= 0) last = idx;
+      } else {
+        above = 0;
+        if (first >= 0 && (silentFor += chunkMs) >= VAD.silenceMs) finish();
+      }
+    };
     src.connect(proc);
     proc.connect(ctx.destination);
     setRecording(true);
 
-    const timer = setTimeout(() => state.recording?.stop(), 6000);
+    const timers = [setTimeout(() => state.recording?.stop(), VAD.maxMs)];
+    if (vadOn()) timers.push(setTimeout(() => { if (first < 0) finish(); }, VAD.noSpeechMs));
     state.recording = {
-      stop: async () => {
-        clearTimeout(timer);
+      stop: async ({ auto = false } = {}) => {
+        timers.forEach(clearTimeout);
         state.recording = null;
         setRecording(false);
         proc.disconnect();
@@ -248,7 +272,10 @@
         stream.getTracks().forEach((t) => t.stop());
         const rate = ctx.sampleRate;
         await ctx.close();
-        const wav = encodeWav(downsample(concat(chunks), rate, 16000), 16000);
+        let use = chunks;
+        if (vadOn() && first >= 0) use = chunks.slice(Math.max(0, first - VAD.preChunks), last + 1 + VAD.postChunks);
+        else if (vadOn() && auto) return toast("Ik hoorde niets. Spreek iets luider en probeer opnieuw.");
+        const wav = encodeWav(downsample(concat(use), rate, 16000), 16000);
         await sendAssessment(() => api(`/api/assess/${encodeURIComponent(state.card.item.id)}`, {
           method: "POST", body: wav, headers: { "Content-Type": "audio/wav" },
         }));
@@ -280,10 +307,12 @@
     rec.start();
   }
 
+  function setSpeakLabel(text) { $("btn-speak").querySelector(".hw-label").textContent = text; }
+
   function setRecording(on) {
     const b = $("btn-speak");
     b.classList.toggle("recording", on);
-    b.querySelector(".hw-label").textContent = on ? "Stop" : "Spreek";
+    setSpeakLabel(on ? (vadOn() || !state.config?.azure ? "Luister…" : "Stop") : "Spreek");
   }
 
   async function sendAssessment(request) {
@@ -656,12 +685,15 @@
     setMsg("");
     $("set-logout").hidden = !store.get("hb_token");
     $("pw-msg").hidden = true;
+    $("set-vad").checked = vadOn();
     try { showSettings(await getJSON("/api/settings")); } catch { setMsg("Instellingen laden mislukt.", true); }
   }
 
   async function refreshConfig() {
     try { state.config = await getJSON("/api/config"); } catch { /* blijft zoals het was */ }
   }
+
+  $("set-vad").onchange = () => store.set("hb_vad", $("set-vad").checked ? "1" : "0");
 
   $("set-form").onsubmit = async (e) => {
     e.preventDefault();
