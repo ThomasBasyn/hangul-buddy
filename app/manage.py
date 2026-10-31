@@ -4,6 +4,7 @@
     docker compose exec hangul-buddy python manage.py list
     docker compose exec hangul-buddy python manage.py reset-password Mama   # wachtwoord vergeten
     docker compose exec hangul-buddy python manage.py remove-user Mama --yes
+    docker compose exec hangul-buddy python manage.py add-time Thomas 322   # eenmalig spreektijd (seconden) bijboeken
 """
 
 import sys
@@ -14,7 +15,7 @@ USAGE = __doc__
 
 
 def run(argv: list[str]) -> int:
-    if len(argv) < 2 or argv[1] not in {"add-user", "list", "reset-password", "reset-token", "remove-user"}:
+    if len(argv) < 2 or argv[1] not in {"add-user", "add-time", "list", "reset-password", "reset-token", "remove-user"}:
         print(USAGE)
         return 2
     main.init_db()
@@ -40,6 +41,13 @@ def run(argv: list[str]) -> int:
                 print(f"Wachtwoord van '{name}' gewist. Nieuwe uitnodigingscode:\n\n  {token}\n")
             else:
                 print(f"Wachtwoord van '{name}' gewist. Activeer opnieuw in de app met je APP_TOKEN.")
+        elif cmd == "add-time":
+            if len(argv) < 4 or not argv[3].replace(".", "", 1).isdigit():
+                print("Gebruik: add-time NAAM SECONDEN [--lang ko] [--month JJJJ-MM]")
+                return 2
+            opts = dict(zip(argv[4::2], argv[5::2]))
+            total = main.add_speech_time(name, float(argv[3]), opts.get("--lang", "ko"), opts.get("--month"))
+            print(f"Bijgeboekt. Totaal voor '{name}' in die maand: {total:.0f} s.")
         elif cmd == "remove-user":
             if "--yes" not in argv:
                 print(f"Dit wist alle voortgang van '{name}'. Voeg --yes toe om door te gaan.")

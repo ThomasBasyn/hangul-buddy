@@ -725,3 +725,15 @@ def test_speaking_time_per_month_and_admin_view(multi, monkeypatch):
 
 def test_usage_requires_login(multi):
     assert multi.get("/api/usage").status_code == 401
+
+
+def test_manual_speech_time_backfill(multi):
+    main = multi.main
+    assert main.add_speech_time("Baas", 322) == 322
+    assert main.add_speech_time("baas", 60) == 382
+    assert multi.get("/api/usage", headers=multi.owner).json()["seconds"] == 382
+    for bad in (("Baas", 0), ("Baas", 1e6), ("Nobody", 5)):
+        with pytest.raises(ValueError):
+            main.add_speech_time(*bad)
+    with pytest.raises(ValueError):
+        main.add_speech_time("Baas", 5, month="2026-13")
