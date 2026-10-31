@@ -181,7 +181,20 @@
   }
 
   // ------------------------------------------------------------ luisteren
-  let audio;
+  // Safari (iPhone) laat geluid alleen afspelen via een element dat bij een tik is "ontgrendeld"; daarom hergebruiken we er één
+  const audio = new Audio();
+  audio.preload = "auto";
+  const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
+  let unlocked = false;
+  function unlockAudio() {
+    if (unlocked) return;
+    unlocked = true;
+    try {
+      audio.src = SILENCE;
+      const p = audio.play();
+      if (p && p.catch) p.catch(() => { unlocked = false; });
+    } catch { unlocked = false; }
+  }
   async function listen(item = state.card?.item) {
     if (!item) return;
     press("btn-listen");
@@ -191,8 +204,9 @@
         const res = await api(`/api/tts/${encodeURIComponent(item.id)}`);
         if (res.ok) {
           const url = URL.createObjectURL(await res.blob());
-          audio?.pause();
-          audio = new Audio(url);
+          audio.pause();
+          audio.src = url;
+          audio.onended = () => URL.revokeObjectURL(url);
           await audio.play();
           return;
         }
@@ -226,12 +240,15 @@
 
   async function recordAzure() {
     let stream;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC(); // binnen de tik aanmaken: Safari houdt hem anders op "suspended"
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     } catch {
+      ctx.close().catch(() => {});
       return toast("Geen toegang tot je microfoon. De app moet via https of localhost draaien.");
     }
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") { try { await ctx.resume(); } catch { /* opnemen lukt dan niet */ } }
     const src = ctx.createMediaStreamSource(stream);
     const proc = ctx.createScriptProcessor(4096, 1, 1);
     const chunks = [];
@@ -582,16 +599,19 @@
   }
 
   function switchView(view) {
+    if (view !== "settings") state.lastView = view;
     document.querySelectorAll(".tab").forEach((t) => {
       const on = t.dataset.view === view;
       t.classList.toggle("active", on);
       t.setAttribute("aria-selected", on);
     });
+    $("btn-settings").setAttribute("aria-pressed", view === "settings");
     $("view-practice").hidden = view !== "practice";
     $("view-lessons").hidden = view !== "lessons";
     $("view-settings").hidden = view !== "settings";
     $("view-board").hidden = view !== "board";
     $("lang-bar").hidden = !(view === "practice" || view === "lessons");
+    window.scrollTo(0, 0);
     if (view === "board") loadBoard();
     if (view === "lessons") renderLessons();
     if (view === "settings") loadSettings();
@@ -681,8 +701,101 @@
     if (!s.can_store_key) setMsg("Eigen sleutels opslaan staat uit op deze server (KEY_SECRET ontbreekt).", true);
   }
 
+  // ---- spreektijd per maand
+  function fmtTime(sec) {
+    sec = Math.round(sec || 0);
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), r = sec % 60;
+    if (h) return `${h} u ${String(m).padStart(2, "0")} min`;
+    if (m) return `${m} min ${String(r).padStart(2, "0")} s`;
+    return `${r} s`;
+  }
+  const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  function monthLabel(key) {
+    const [y, m] = key.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("nl-BE", { month: "long", year: "numeric" });
+  }
+  function shiftMonth(key, delta) {
+    const [y, m] = key.split("-").map(Number);
+    return monthKey(new Date(y, m - 1 + delta, 1));
+  }
+  const langLabel = (c) => { const l = state.config?.languages?.find((x) => x.code === c); return l ? `${l.flag} ${l.name}` : c; };
+
+  function meterRow(name, sec, max, extra = "") {
+    const row = document.createElement("div");
+    row.className = "meter-row";
+    const n = document.createElement("span");
+    n.className = "m-name";
+    n.textContent = name;
+    if (extra) { const sm = document.createElement("small"); sm.textContent = ` ${extra}`; n.append(sm); }
+    const bar = document.createElement("div");
+    bar.className = "meter";
+    const fill = document.createElement("i");
+    fill.style.width = `${max ? Math.max(sec ? 3 : 0, Math.round((sec / max) * 100)) : 0}%`;
+    bar.append(fill);
+    const v = document.createElement("span");
+    v.className = "m-val";
+    v.textContent = fmtTime(sec);
+    row.append(n, bar, v);
+    return row;
+  }
+
+  function histList(el, details, items, current, onPick) {
+    el.replaceChildren();
+    const past = items.filter((h) => h.seconds > 0);
+    details.hidden = past.length === 0;
+    past.forEach((h) => {
+      const li = document.createElement("li");
+      li.className = "btnrow";
+      const a = document.createElement("span"); a.textContent = monthLabel(h.month);
+      const b = document.createElement("span"); b.textContent = fmtTime(h.seconds);
+      li.append(a, b);
+      li.onclick = () => onPick(h.month);
+      el.append(li);
+    });
+  }
+
+  async function loadUsage(month = state.usageMonth || monthKey()) {
+    state.usageMonth = month;
+    $("usage-month").textContent = monthLabel(month);
+    $("usage-next").disabled = month >= monthKey();
+    let u;
+    try { u = await getJSON(`/api/usage?month=${month}`); } catch { $("usage-sub").textContent = "Spreektijd laden mislukt."; return; }
+    if (u.month !== state.usageMonth) return; // ondertussen een andere maand gekozen
+    $("usage-big").textContent = fmtTime(u.seconds);
+    $("usage-sub").textContent = u.attempts
+      ? `${u.attempts} ${u.attempts === 1 ? "poging" : "pogingen"} in ${monthLabel(month)}`
+      : `Nog niets ingesproken in ${monthLabel(month)}.`;
+    const langs = $("usage-langs");
+    langs.replaceChildren();
+    const entries = Object.entries(u.by_lang).sort((a, b) => b[1] - a[1]);
+    entries.forEach(([c, sec]) => langs.append(meterRow(langLabel(c), sec, entries[0][1])));
+    histList($("usage-hist-list"), $("usage-hist"), u.history, month, (m) => loadUsage(m));
+
+    const adm = $("admin-card");
+    adm.hidden = !(u.admin && u.all);
+    if (adm.hidden) return;
+    const a = u.all;
+    $("admin-big").textContent = fmtTime(a.seconds);
+    $("admin-sub").textContent = `${a.attempts} ${a.attempts === 1 ? "poging" : "pogingen"} door ${a.users.filter((x) => x.seconds > 0).length} van ${a.users.length} gebruikers · ${monthLabel(month)}`;
+    const pct = a.azure_limit ? Math.min(100, Math.round((a.azure_estimate / a.azure_limit) * 100)) : 0;
+    $("admin-meter").hidden = $("admin-meter-text").hidden = false;
+    const fill = $("admin-meter-fill");
+    fill.style.width = `${pct}%`;
+    fill.className = pct >= 100 ? "full" : pct >= 80 ? "warn" : "";
+    $("admin-meter-text").textContent = `Gedeelde sleutel: ${fmtTime(a.shared_seconds)} ingesproken, ongeveer ${fmtTime(a.azure_estimate)} van de ${fmtTime(a.azure_limit)} gratis Azure-tijd (schatting, Azure telt elke opname ongeveer dubbel).`;
+    const box = $("admin-users");
+    box.replaceChildren();
+    const top = Math.max(1, ...a.users.map((x) => x.seconds));
+    a.users.forEach((x) => box.append(meterRow(x.name, x.seconds, top, x.own > 0 && x.own >= x.seconds ? "eigen sleutel" : "")));
+  }
+
+  $("usage-prev").onclick = () => loadUsage(shiftMonth(state.usageMonth || monthKey(), -1));
+  $("usage-next").onclick = () => loadUsage(shiftMonth(state.usageMonth || monthKey(), 1));
+
   async function loadSettings() {
     setMsg("");
+    state.usageMonth = monthKey();
+    loadUsage();
     $("set-logout").hidden = !store.get("hb_token");
     $("pw-msg").hidden = true;
     $("set-vad").checked = vadOn();
@@ -762,6 +875,7 @@
   });
   document.querySelectorAll(".grade").forEach((b) => { b.onclick = () => grade(Number(b.dataset.grade)); });
   document.querySelectorAll(".tab").forEach((t) => { t.onclick = () => switchView(t.dataset.view); });
+  $("btn-settings").onclick = () => switchView($("view-settings").hidden ? "settings" : (state.lastView || "practice"));
 
   document.addEventListener("keydown", (e) => {
     if (e.target.closest("input, dialog") || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -773,6 +887,7 @@
   });
 
   ["pointerdown", "keydown"].forEach((ev) => document.addEventListener(ev, () => { state.interacted = true; }, { once: true, capture: true }));
+  ["touchend", "click", "keydown"].forEach((ev) => document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
 
   // Stemmen laden asynchroon in sommige browsers
   if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => {};

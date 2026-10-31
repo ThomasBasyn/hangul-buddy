@@ -671,3 +671,57 @@ def test_azure_429_message_tells_busy_from_monthly_quota(multi):
     quota = main.azure_error(httpx.HTTPStatusError("x", request=req, response=httpx.Response(429, text="Quota exceeded")))
     assert "bezet" in busy.detail and "gratis" not in busy.detail
     assert "maand" in quota.detail
+
+
+def test_speaking_time_per_month_and_admin_view(multi, monkeypatch):
+    c, main = multi, multi.main
+
+    async def fake_assess(wav, ref, key=None, region=None, locale=None):
+        return {"score": 88.0, "heard": ref, "words": [], "status": "Success"}
+
+    monkeypatch.setattr(main.azure_speech, "enabled", lambda: True)
+    monkeypatch.setattr(main.azure_speech, "assess", fake_assess)
+    monkeypatch.setattr(main.azure_speech, "KEY", "gedeelde-sleutel-123456789")
+    monkeypatch.setattr(main.azure_speech, "REGION", "westeurope")
+
+    c.post("/api/assess/1-1", content=wav_bytes(2.0), headers=c.mama)
+    c.post("/api/assess/1-1", content=wav_bytes(3.0), headers=c.mama)
+    c.post("/api/assess/de:1-1", content=wav_bytes(2.0), headers=c.owner)
+    # het browser-alternatief verbruikt geen Azure-tijd en telt niet mee
+    c.post("/api/assess-text/1-1", json={"heard": "안녕하세요"}, headers=c.mama)
+
+    mama = c.get("/api/usage", headers=c.mama).json()
+    assert mama["seconds"] == 5 and mama["attempts"] == 2 and mama["by_lang"] == {"ko": 5}
+    assert not mama["admin"] and "all" not in mama  # gewone gebruiker ziet alleen zichzelf
+
+    owner = c.get("/api/usage", headers=c.owner).json()
+    assert owner["admin"] and owner["seconds"] == 2 and owner["by_lang"] == {"de": 2}
+    alle = owner["all"]
+    assert alle["seconds"] == 7 and alle["attempts"] == 3
+    assert {u["name"]: u["seconds"] for u in alle["users"]} == {"Baas": 2, "Mama": 5}
+    assert alle["shared_seconds"] == 7 and alle["azure_estimate"] == 14
+    assert alle["users"][0]["name"] == "Mama"  # meeste tijd bovenaan
+
+    # een andere maand is leeg, een ongeldige maand wordt geweigerd
+    assert c.get("/api/usage?month=2020-01", headers=c.mama).json()["seconds"] == 0
+    assert c.get("/api/usage?month=2020-13", headers=c.mama).status_code == 400
+    assert c.get("/api/usage?month=abc", headers=c.mama).status_code == 400
+    assert c.get("/api/settings", headers=c.owner).json()["is_admin"] is True
+    assert c.get("/api/settings", headers=c.mama).json()["is_admin"] is False
+
+    # oude maanden blijven bewaard
+    with main.db() as con:
+        con.execute("INSERT INTO speech_log (user_id, ts, month, seconds, lang, source) VALUES (2,'x','2026-09',60,'ko','own')")
+    hist = c.get("/api/usage", headers=c.mama).json()["history"]
+    assert {h["month"]: h["seconds"] for h in hist}[main.today().isoformat()[:7]] == 5
+    assert any(h["month"] == "2026-09" and h["seconds"] == 60 for h in hist)
+    sept = c.get("/api/usage?month=2026-09", headers=c.owner).json()["all"]
+    assert sept["seconds"] == 60 and sept["shared_seconds"] == 0
+
+    main.remove_user("Mama")
+    with main.db() as con:
+        assert con.execute("SELECT COUNT(*) FROM speech_log WHERE user_id=2").fetchone()[0] == 0
+
+
+def test_usage_requires_login(multi):
+    assert multi.get("/api/usage").status_code == 401

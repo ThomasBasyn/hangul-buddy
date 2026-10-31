@@ -2,22 +2,39 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#14161c">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f3f1ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hangul Buddy">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
 <title>Hangul Buddy</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a2d35'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23e9fbe9' font-family='sans-serif'%3E%ED%95%9C%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="logo" aria-hidden="true">한</span> Hangul Buddy</div>
-  <nav class="tabs" role="tablist">
-    <button role="tab" class="tab active" data-view="practice" aria-selected="true">Oefenen</button>
-    <button role="tab" class="tab" data-view="lessons" aria-selected="false">Lessen</button>
-    <button role="tab" class="tab" data-view="board" aria-selected="false">Ranglijst</button>
-    <button role="tab" class="tab" data-view="settings" aria-selected="false">Instellingen</button>
-  </nav>
+  <div class="top-in">
+    <div class="brand"><span class="logo" aria-hidden="true">한</span><span class="brand-name">Hangul Buddy</span></div>
+    <button class="icon-btn" id="btn-settings" aria-label="Instellingen" aria-pressed="false" title="Instellingen">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
 </header>
+<nav class="tabs" role="tablist" aria-label="Hoofdmenu">
+  <div class="tabs-in">
+    <button role="tab" class="tab active" data-view="practice" aria-selected="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Oefenen</span></button>
+    <button role="tab" class="tab" data-view="lessons" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16v-4"/></svg><span>Lessen</span></button>
+    <button role="tab" class="tab" data-view="board" aria-selected="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-8M12 20V4M18 20v-5"/></svg><span>Ranglijst</span></button>
+  </div>
+</nav>
 
 <main>
   <div class="lang-bar" id="lang-bar">
@@ -129,9 +146,41 @@
 
   <!-- ============ INSTELLINGEN ============ -->
   <section id="view-settings" class="view" hidden>
-    <div class="card settings">
-      <h2 id="set-user">Instellingen</h2>
+    <h2 class="page-title" id="set-user">Instellingen</h2>
+
+    <div class="card" id="usage-card">
+      <div class="card-head">
+        <h3>Jouw spreektijd</h3>
+        <div class="month-nav" role="group" aria-label="Maand kiezen">
+          <button type="button" class="icon-btn sm" id="usage-prev" aria-label="Vorige maand">‹</button>
+          <span id="usage-month" aria-live="polite"></span>
+          <button type="button" class="icon-btn sm" id="usage-next" aria-label="Volgende maand">›</button>
+        </div>
+      </div>
+      <div class="usage-big" id="usage-big">0 s</div>
+      <p class="muted" id="usage-sub"></p>
+      <div id="usage-langs" class="meter-list"></div>
+      <details id="usage-hist" hidden>
+        <summary>Eerdere maanden</summary>
+        <ul id="usage-hist-list" class="plain-list"></ul>
+      </details>
+    </div>
+
+    <div class="card" id="admin-card" hidden>
+      <div class="card-head"><h3>Alle gebruikers</h3><span class="tag">beheerder</span></div>
+      <div class="usage-big" id="admin-big">0 s</div>
+      <p class="muted" id="admin-sub"></p>
+      <div class="meter" id="admin-meter" hidden><i id="admin-meter-fill"></i></div>
+      <p class="muted small" id="admin-meter-text" hidden></p>
+      <div id="admin-users" class="meter-list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Opnemen</h3>
       <label class="check"><input type="checkbox" id="set-vad"> <span>Opname stopt vanzelf als je uitgesproken bent<small>Aan dit toestel gekoppeld. Je kunt altijd zelf op Stop tikken.</small></span></label>
+    </div>
+
+    <div class="card">
       <h3>Azure Speech-sleutel</h3>
       <p id="set-status" class="muted"></p>
       <p class="muted">Met je eigen gratis Azure-sleutel heb je je eigen maandelijkse spreektijd. Zonder eigen sleutel gebruik je die van de eigenaar.</p>
@@ -140,27 +189,27 @@
           <input type="password" id="set-key" autocomplete="off" spellcheck="false" placeholder="Plak hier je Azure-sleutel">
         </label>
         <label>Regio
-          <input type="text" id="set-region" autocapitalize="none" spellcheck="false" placeholder="bv. swedencentral of westeurope">
+          <input type="text" id="set-region" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="bv. swedencentral of westeurope">
         </label>
-        <div class="practice-row">
+        <div class="practice-row start">
           <button class="primary" type="submit" id="set-save">Controleren en opslaan</button>
           <button class="ghost" type="button" id="set-remove" hidden>Eigen sleutel verwijderen</button>
         </div>
       </form>
       <p id="set-msg" class="auto-msg" hidden></p>
-      <hr>
-      <div id="pw-section" hidden>
-        <h3>Wachtwoord wijzigen</h3>
-        <form id="pw-form" autocomplete="off">
-          <label>Huidig wachtwoord<input type="password" id="pw-old" autocomplete="current-password" required></label>
-          <label>Nieuw wachtwoord (minstens 8 tekens)<input type="password" id="pw-new" autocomplete="new-password" minlength="8" required></label>
-          <button class="primary" type="submit">Wachtwoord wijzigen</button>
-        </form>
-        <p id="pw-msg" class="auto-msg" hidden></p>
-        <hr>
-      </div>
-      <button class="ghost" id="set-logout" hidden>Uitloggen op dit toestel</button>
     </div>
+
+    <div class="card" id="pw-section" hidden>
+      <h3>Wachtwoord wijzigen</h3>
+      <form id="pw-form" autocomplete="off">
+        <label>Huidig wachtwoord<input type="password" id="pw-old" autocomplete="current-password" required></label>
+        <label>Nieuw wachtwoord (minstens 8 tekens)<input type="password" id="pw-new" autocomplete="new-password" minlength="8" required></label>
+        <button class="primary" type="submit">Wachtwoord wijzigen</button>
+      </form>
+      <p id="pw-msg" class="auto-msg" hidden></p>
+    </div>
+
+    <button class="ghost wide" id="set-logout" hidden>Uitloggen op dit toestel</button>
   </section>
 </main>
 

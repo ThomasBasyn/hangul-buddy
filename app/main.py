@@ -166,6 +166,16 @@ CREATE TABLE IF NOT EXISTS xp_log (
     lang    TEXT NOT NULL DEFAULT 'ko'
 );
 CREATE INDEX IF NOT EXISTS idx_xp_user_day ON xp_log(user_id, day);
+CREATE TABLE IF NOT EXISTS speech_log (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ts      TEXT NOT NULL,
+    month   TEXT NOT NULL,
+    seconds REAL NOT NULL,
+    lang    TEXT NOT NULL,
+    source  TEXT NOT NULL DEFAULT 'shared'
+);
+CREATE INDEX IF NOT EXISTS idx_speech_user_month ON speech_log(user_id, month);
 """
 
 
@@ -323,7 +333,7 @@ def remove_user(name: str) -> None:
         row = con.execute("SELECT id FROM users WHERE lower(name)=lower(?) AND id<>1", (clean_name(name),)).fetchone()
         if not row:
             raise ValueError(f"gebruiker '{name}' niet gevonden (de eigenaar kan niet verwijderd worden)")
-        for table in ("progress", "review_log", "xp_log", "sessions"):
+        for table in ("progress", "review_log", "xp_log", "sessions", "speech_log"):
             con.execute(f"DELETE FROM {table} WHERE user_id=?", (row["id"],))
         con.execute("DELETE FROM users WHERE id=?", (row["id"],))
 
@@ -610,7 +620,18 @@ async def assess_audio(item_id: str, request: Request, user: dict = Depends(curr
         raise azure_error(exc) from exc
     result["grade"] = score_to_grade(result["score"])
     result["provider"] = "azure"
+    log_speech(user["id"], item["lang"], creds[2], (len(data) - 44) / 32000)
     return result
+
+
+def log_speech(user_id: int, lang: str, source: str, seconds: float) -> None:
+    """Houdt bij hoeveel opnametijd een gebruiker per maand heeft ingesproken (alleen de duur, nooit het geluid)."""
+    try:
+        with db() as con:
+            con.execute("INSERT INTO speech_log (user_id, ts, month, seconds, lang, source) VALUES (?,?,?,?,?,?)",
+                        (user_id, now_iso(), today().isoformat()[:7], round(max(seconds, 0), 2), lang, source))
+    except sqlite3.Error:
+        log.exception("Spreektijd bijhouden mislukt")
 
 
 class HeardIn(BaseModel):
@@ -829,11 +850,52 @@ class AzureKeyIn(BaseModel):
     region: str = Field(min_length=3, max_length=40)
 
 
+AZURE_FREE_SECONDS = 5 * 3600     # gratis laag (F0): 5 uur spraak per maand
+AZURE_BILLING_FACTOR = 2          # elke opname gaat twee keer naar Azure (score + tekst), dus telt ongeveer dubbel
+MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
+
+
+@app.get("/api/usage")
+def usage(month: str = "", user: dict = Depends(current_user)):
+    """Ingesproken tijd per maand. Een gewone gebruiker ziet alleen zijn eigen tijd, de beheerder (eigenaar) ook die van iedereen."""
+    if month and not MONTH_RE.match(month):
+        raise HTTPException(400, "ongeldige maand")
+    month = month or today().isoformat()[:7]
+    admin = user["id"] == 1
+    with db() as con:
+        mine = con.execute("SELECT COALESCE(SUM(seconds),0) s, COUNT(*) n FROM speech_log WHERE user_id=? AND month=?",
+                           (user["id"], month)).fetchone()
+        by_lang = {r["lang"]: round(r["s"]) for r in con.execute(
+            "SELECT lang, SUM(seconds) s FROM speech_log WHERE user_id=? AND month=? GROUP BY lang", (user["id"], month))}
+        history = [{"month": r["month"], "seconds": round(r["s"])} for r in con.execute(
+            "SELECT month, SUM(seconds) s FROM speech_log WHERE user_id=? GROUP BY month ORDER BY month DESC LIMIT 12",
+            (user["id"],))]
+        out = {"month": month, "admin": admin, "seconds": round(mine["s"]), "attempts": mine["n"],
+               "by_lang": by_lang, "history": history}
+        if admin:
+            users = [{"name": r["name"], "seconds": round(r["s"]), "attempts": r["n"], "own": r["own"]}
+                     for r in con.execute(
+                """SELECT u.name, COALESCE(SUM(l.seconds),0) s, COUNT(l.id) n,
+                          COALESCE(SUM(CASE WHEN l.source='own' THEN l.seconds END),0) own
+                   FROM users u LEFT JOIN speech_log l ON l.user_id=u.id AND l.month=?
+                   GROUP BY u.id ORDER BY s DESC, u.name""", (month,))]
+            tot = con.execute("SELECT COALESCE(SUM(seconds),0) s, COUNT(*) n, "
+                              "COALESCE(SUM(CASE WHEN source='shared' THEN seconds END),0) shared "
+                              "FROM speech_log WHERE month=?", (month,)).fetchone()
+            months = [{"month": r["month"], "seconds": round(r["s"])} for r in con.execute(
+                "SELECT month, SUM(seconds) s FROM speech_log GROUP BY month ORDER BY month DESC LIMIT 12")]
+            out["all"] = {"seconds": round(tot["s"]), "attempts": tot["n"], "shared_seconds": round(tot["shared"]),
+                          "azure_estimate": round(tot["shared"] * AZURE_BILLING_FACTOR), "azure_limit": AZURE_FREE_SECONDS,
+                          "users": users, "history": months}
+    return out
+
+
 def settings_out(user: dict) -> dict:
     creds = azure_creds(user)
     return {
         "name": user["name"],
         "is_owner": user["id"] == 1,
+        "is_admin": user["id"] == 1,
         "has_password": user.get("pw_hash") is not None,
         "azure_source": creds[2] if creds else None,
         "azure_region": creds[1] if creds and creds[2] == "own" else None,
