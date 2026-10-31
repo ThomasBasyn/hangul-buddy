@@ -12,6 +12,8 @@ KEY = os.getenv("AZURE_SPEECH_KEY", "")
 REGION = os.getenv("AZURE_SPEECH_REGION", "westeurope")
 VOICE = os.getenv("AZURE_TTS_VOICE", "ko-KR-SunHiNeural")
 LANG = "ko-KR"
+# Welke score telt: "accuracy" (uitspraak x volledigheid, vloeiendheid telt niet mee) of "pron" (Azure-totaal)
+SCORE_MODE = os.getenv("AZURE_SCORE_MODE", "accuracy").lower()
 
 FORMATS = {
     "mp3": ("audio-24khz-48kbitrate-mono-mp3", "audio/mpeg"),
@@ -146,8 +148,14 @@ def parse_assessment(data: dict) -> dict:
                 for sy in w.get("Syllables", [])
             ],
         })
+    pron = float(s.get("PronScore", s.get("AccuracyScore", 0)))
+    acc, comp = s.get("AccuracyScore"), s.get("CompletenessScore")
+    # Bij één of twee woorden drukt een korte pauze de vloeiendheid, ook bij een goede uitspraak.
+    # Daarom telt standaard alleen de nauwkeurigheid (met aftrek voor ontbrekende woorden).
+    score = float(acc) * min(float(comp), 100.0) / 100.0 if SCORE_MODE == "accuracy" and acc is not None and comp is not None else pron
     return {
-        "score": float(s.get("PronScore", s.get("AccuracyScore", 0))),
+        "score": round(score, 1),
+        "pron_score": pron,
         "accuracy": s.get("AccuracyScore"),
         "fluency": s.get("FluencyScore"),
         "completeness": s.get("CompletenessScore"),

@@ -369,9 +369,12 @@
     if (syl.length) {
       detail = `<div>${syl.map((x) => `<span class="syl ${scoreClass(x.score)}" title="${Math.round(x.score)}%">${esc(x.text)}</span>`).join(" ")}</div>`;
     }
+    const parts = [["Uitspraak", r.accuracy], ["Vloeiendheid", r.fluency], ["Volledigheid", r.completeness]]
+      .filter(([, v]) => typeof v === "number").map(([k, v]) => `${k} ${Math.round(v)}`);
+    const sub = parts.length ? `<div class="sub">${parts.join(" · ")}</div>` : "";
     const heard = r.heard ? `<div class="heard">Gehoord: <span lang="${esc(state.card?.item?.lang || "ko")}">${esc(r.heard)}</span></div>` : "";
     const verdict = s >= 90 ? "Uitstekend!" : s >= 75 ? "Goed!" : s >= 55 ? "Bijna" : "Nog eens proberen";
-    $("feedback").innerHTML = `<div class="score ${scoreClass(s)}">${s}%</div><div>${verdict}</div>${detail}${heard}`;
+    $("feedback").innerHTML = `<div class="score ${scoreClass(s)}">${s}%</div><div>${verdict}</div>${detail}${sub}${heard}`;
     reveal();
     const btn = document.querySelector(`.grade[data-grade="${GRADE_BUTTON[r.grade]}"]`);
     document.querySelectorAll(".grade").forEach((b) => b.classList.toggle("suggested", b === btn));

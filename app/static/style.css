@@ -248,3 +248,4 @@ dialog input { width: 100%; padding: 8px 10px; margin: 8px 0 12px; border-radius
 .xp-lang { font-size: 13px; white-space: nowrap; }
 .board-row.empty { display: block; text-align: center; color: var(--muted); }
 .word[lang="ja"], .word[lang="zh"] { font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif; }
+.sub { color: var(--screen-dim); font-size: 12px; margin-top: 2px; }

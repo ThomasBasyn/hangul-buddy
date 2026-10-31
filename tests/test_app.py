@@ -613,3 +613,17 @@ def test_database_from_before_languages_is_upgraded(tmp_path, monkeypatch):
     with main.db() as con:
         assert con.execute("SELECT lang FROM users WHERE id=1").fetchone()[0] == "ko"
         assert con.execute("SELECT lang, amount FROM xp_log").fetchone()[:] == ("ko", 15)
+
+
+def test_score_ignores_fluency_by_default(monkeypatch):
+    import azure_speech
+    data = {"RecognitionStatus": "Success", "NBest": [{"Display": "Guten Morgen.", "PronunciationAssessment": {
+        "PronScore": 84, "AccuracyScore": 96, "FluencyScore": 62, "CompletenessScore": 100}, "Words": []}]}
+    r = azure_speech.parse_assessment(data)
+    assert r["score"] == 96 and r["pron_score"] == 84 and r["fluency"] == 62
+    # ontbrekend woord: aftrek via volledigheid
+    data["NBest"][0]["PronunciationAssessment"]["CompletenessScore"] = 50
+    assert azure_speech.parse_assessment(data)["score"] == 48
+    # terug naar het Azure-totaal
+    monkeypatch.setattr(azure_speech, "SCORE_MODE", "pron")
+    assert azure_speech.parse_assessment(data)["score"] == 84
