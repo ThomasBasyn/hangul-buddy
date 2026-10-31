@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import os
+import weakref
 from xml.sax.saxutils import escape
 
 import httpx
@@ -14,6 +15,35 @@ VOICE = os.getenv("AZURE_TTS_VOICE", "ko-KR-SunHiNeural")
 LANG = "ko-KR"
 # Welke score telt: "accuracy" (uitspraak x volledigheid, vloeiendheid telt niet mee) of "pron" (Azure-totaal)
 SCORE_MODE = os.getenv("AZURE_SCORE_MODE", "accuracy").lower()
+
+# De gratis laag (F0) staat maar één spraakaanroep tegelijk toe. We doen ze daarom één voor één per sleutel
+# (zet AZURE_STT_CONCURRENCY hoger bij een betaalde laag) en proberen het bij 429 of 503 nog twee keer.
+STT_CONCURRENCY = int(os.getenv("AZURE_STT_CONCURRENCY", "1"))
+RETRIES = 2
+RETRY_BASE = 0.8  # seconden, wordt bij elke nieuwe poging groter
+_slots: "weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, dict[str, asyncio.Semaphore]]" = weakref.WeakKeyDictionary()
+
+
+async def _post(client: httpx.AsyncClient, url: str, key: str, limit: bool = True, **kwargs) -> httpx.Response:
+    """POST met wachtrij per sleutel en nieuwe pogingen bij 'te druk'. Geeft een HTTPStatusError bij falen."""
+    per_loop = _slots.setdefault(asyncio.get_running_loop(), {})
+    sem = per_loop.setdefault(key, asyncio.Semaphore(STT_CONCURRENCY))
+    for attempt in range(RETRIES + 1):
+        if limit:
+            async with sem:
+                r = await client.post(url, **kwargs)
+        else:
+            r = await client.post(url, **kwargs)
+        if r.status_code not in (429, 503) or attempt == RETRIES:
+            r.raise_for_status()
+            return r
+        try:
+            wait = float(r.headers.get("Retry-After", ""))
+        except ValueError:
+            wait = RETRY_BASE * (attempt + 1)
+        await asyncio.sleep(min(wait, 3.0))
+    raise AssertionError("onbereikbaar")
+
 
 FORMATS = {
     "mp3": ("audio-24khz-48kbitrate-mono-mp3", "audio/mpeg"),
@@ -36,8 +66,8 @@ async def tts(text: str, fmt: str = "mp3", rate: str = "-10%", key: str | None =
         f'<prosody rate="{rate}">{escape(text)}</prosody></voice></speak>'
     )
     async with httpx.AsyncClient(timeout=20) as client:
-        r = await client.post(
-            f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1",
+        r = await _post(
+            client, f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1", key, limit=False,
             headers={
                 "Ocp-Apim-Subscription-Key": key,
                 "Content-Type": "application/ssml+xml",
@@ -46,7 +76,6 @@ async def tts(text: str, fmt: str = "mp3", rate: str = "-10%", key: str | None =
             },
             content=ssml.encode("utf-8"),
         )
-        r.raise_for_status()
         return r.content
 
 
@@ -64,8 +93,8 @@ async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str
         "EnableMiscue": True,
     }
     header = base64.b64encode(json.dumps(cfg).encode("utf-8")).decode()
-    r = await client.post(
-        f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
+    r = await _post(
+        client, f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}", key,
         params={"language": locale, "format": "detailed"},
         headers={
             "Ocp-Apim-Subscription-Key": key,
@@ -75,14 +104,13 @@ async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str
         },
         content=wav,
     )
-    r.raise_for_status()
     return parse_assessment(r.json())
 
 
 async def _transcribe(client: httpx.AsyncClient, wav: bytes, key: str, region: str, locale: str = LANG) -> str:
     """Gewone spraakherkenning zonder referentietekst: wat Azure echt hoorde."""
-    r = await client.post(
-        f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
+    r = await _post(
+        client, f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}", key,
         params={"language": locale, "format": "simple"},
         headers={
             "Ocp-Apim-Subscription-Key": key,
@@ -91,7 +119,6 @@ async def _transcribe(client: httpx.AsyncClient, wav: bytes, key: str, region: s
         },
         content=wav,
     )
-    r.raise_for_status()
     data = r.json()
     if data.get("RecognitionStatus") != "Success":
         return ""

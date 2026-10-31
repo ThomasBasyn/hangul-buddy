@@ -431,7 +431,9 @@ def azure_error(exc: httpx.HTTPError) -> HTTPException:
         if code in (401, 403):
             return HTTPException(502, "Azure weigert de sleutel. Controleer je sleutel en regio bij Instellingen.")
         if code == 429:
-            return HTTPException(502, "Azure-limiet bereikt (te veel tegelijk, of je gratis tijd van deze maand is op).")
+            if "quota" in exc.response.text.lower():
+                return HTTPException(502, "Je gratis Azure-tijd van deze maand is op. Dit komt terug aan het begin van de volgende maand.")
+            return HTTPException(502, "Azure is even bezet. Probeer het over een paar seconden opnieuw.")
     return HTTPException(502, "Azure Speech gaf een fout")
 
 

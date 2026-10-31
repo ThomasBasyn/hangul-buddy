@@ -627,3 +627,47 @@ def test_score_ignores_fluency_by_default(monkeypatch):
     # terug naar het Azure-totaal
     monkeypatch.setattr(azure_speech, "SCORE_MODE", "pron")
     assert azure_speech.parse_assessment(data)["score"] == 84
+
+
+def test_azure_retries_on_busy_and_runs_one_call_at_a_time(monkeypatch):
+    import asyncio
+    import httpx
+    import azure_speech
+
+    monkeypatch.setattr(azure_speech, "RETRY_BASE", 0)
+    seen = {"calls": 0, "busy": 0, "max_parallel": 0}
+
+    async def run(statuses):
+        seen.update(calls=0, busy=0, max_parallel=0)
+        queue = list(statuses)
+
+        async def handler(request):
+            seen["calls"] += 1
+            seen["busy"] += 1
+            seen["max_parallel"] = max(seen["max_parallel"], seen["busy"])
+            await asyncio.sleep(0.01)
+            seen["busy"] -= 1
+            return httpx.Response(queue.pop(0) if queue else 200, json={"ok": True}, headers={"Retry-After": "0"})
+
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            return await asyncio.gather(*[azure_speech._post(client, "http://x", "key1") for _ in range(2)],
+                                        return_exceptions=True)
+
+    # twee keer 'te druk' en dan gelukt: de gebruiker merkt niets, en nooit twee aanroepen tegelijk
+    ok = asyncio.run(run([429, 429, 200, 200]))
+    assert all(isinstance(r, httpx.Response) and r.status_code == 200 for r in ok)
+    assert seen["max_parallel"] == 1 and seen["calls"] == 4
+    # blijft het 429, dan volgt na drie pogingen de fout
+    bad = asyncio.run(run([429] * 6))
+    assert all(isinstance(r, httpx.HTTPStatusError) and r.response.status_code == 429 for r in bad)
+    assert seen["calls"] == 6
+
+
+def test_azure_429_message_tells_busy_from_monthly_quota(multi):
+    import httpx
+    main = multi.main
+    req = httpx.Request("POST", "http://x")
+    busy = main.azure_error(httpx.HTTPStatusError("x", request=req, response=httpx.Response(429, text="Too Many Requests")))
+    quota = main.azure_error(httpx.HTTPStatusError("x", request=req, response=httpx.Response(429, text="Quota exceeded")))
+    assert "bezet" in busy.detail and "gratis" not in busy.detail
+    assert "maand" in quota.detail
