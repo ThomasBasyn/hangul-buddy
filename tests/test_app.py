@@ -164,3 +164,36 @@ def test_token(tmp_path, monkeypatch):
         assert c.get("/api/next").status_code == 401
         assert c.get("/api/next", headers={"X-App-Token": "geheim123"}).status_code == 200
         assert c.get("/").status_code == 200  # web-app zelf is publiek, de API niet
+
+
+def test_azure_assess_uses_separate_transcript(monkeypatch):
+    """'Gehoord' komt uit een gewone herkenning, niet uit de referentietekst."""
+    import asyncio
+
+    import httpx
+
+    import azure_speech
+
+    def handler(request):
+        if "pronunciation-assessment" in request.headers:
+            return httpx.Response(200, json={
+                "RecognitionStatus": "Success",
+                "NBest": [{"Display": "안녕히 계세요.", "PronScore": 8, "AccuracyScore": 8,
+                           "Words": [{"Word": "안녕히", "AccuracyScore": 8, "ErrorType": "Mispronunciation"}]}],
+            })
+        return httpx.Response(200, json={"RecognitionStatus": "Success", "DisplayText": "고마워요."})
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler)))
+    result = asyncio.run(azure_speech.assess(b"wav", "안녕히 계세요"))
+    assert result["heard"] == "고마워요."
+    assert result["score"] == 8
+
+    def failing(request):
+        if "pronunciation-assessment" in request.headers:
+            return handler(request)
+        return httpx.Response(500)
+
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(failing)))
+    result = asyncio.run(azure_speech.assess(b"wav", "안녕히 계세요"))
+    assert result["heard"] == ""  # liever niets dan de referentietekst als "gehoord"

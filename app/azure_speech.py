@@ -1,5 +1,6 @@
 """Azure Speech: tekst-naar-spraak en uitspraakbeoordeling (REST, geen SDK nodig)."""
 
+import asyncio
 import base64
 import json
 import os
@@ -44,30 +45,66 @@ async def tts(text: str, fmt: str = "mp3", rate: str = "-10%") -> bytes:
         return r.content
 
 
-async def assess(wav: bytes, reference: str) -> dict:
-    """Uitspraakbeoordeling. Verwacht 16 kHz, 16-bit, mono WAV."""
+STT_URL = "conversation/cognitiveservices/v1"
+
+
+async def _score(client: httpx.AsyncClient, wav: bytes, reference: str) -> dict:
+    """Uitspraakscore t.o.v. de referentietekst (Azure legt de opname langs die tekst)."""
     cfg = {
         "ReferenceText": reference,
         "GradingSystem": "HundredMark",
         "Granularity": "Phoneme",
         "Dimension": "Comprehensive",
+        "EnableMiscue": True,
     }
     header = base64.b64encode(json.dumps(cfg).encode("utf-8")).decode()
+    r = await client.post(
+        f"https://{REGION}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
+        params={"language": LANG, "format": "detailed"},
+        headers={
+            "Ocp-Apim-Subscription-Key": KEY,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Pronunciation-Assessment": header,
+            "Accept": "application/json",
+        },
+        content=wav,
+    )
+    r.raise_for_status()
+    return parse_assessment(r.json())
+
+
+async def _transcribe(client: httpx.AsyncClient, wav: bytes) -> str:
+    """Gewone spraakherkenning zonder referentietekst: wat Azure echt hoorde."""
+    r = await client.post(
+        f"https://{REGION}.stt.speech.microsoft.com/speech/recognition/{STT_URL}",
+        params={"language": LANG, "format": "simple"},
+        headers={
+            "Ocp-Apim-Subscription-Key": KEY,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json",
+        },
+        content=wav,
+    )
+    r.raise_for_status()
+    data = r.json()
+    if data.get("RecognitionStatus") != "Success":
+        return ""
+    return data.get("DisplayText", "")
+
+
+async def assess(wav: bytes, reference: str) -> dict:
+    """Uitspraakbeoordeling. Verwacht 16 kHz, 16-bit, mono WAV."""
     async with httpx.AsyncClient(timeout=30) as client:
-        r = await client.post(
-            f"https://{REGION}.stt.speech.microsoft.com/speech/recognition/"
-            f"conversation/cognitiveservices/v1",
-            params={"language": LANG, "format": "detailed"},
-            headers={
-                "Ocp-Apim-Subscription-Key": KEY,
-                "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
-                "Pronunciation-Assessment": header,
-                "Accept": "application/json",
-            },
-            content=wav,
+        scored, heard = await asyncio.gather(
+            _score(client, wav, reference),
+            _transcribe(client, wav),
+            return_exceptions=True,
         )
-        r.raise_for_status()
-        return parse_assessment(r.json())
+    if isinstance(scored, BaseException):
+        raise scored
+    # De "heard" uit de beoordeling is de referentietekst, dus niet bruikbaar als transcript.
+    scored["heard"] = "" if isinstance(heard, BaseException) else heard
+    return scored
 
 
 def _scores(obj: dict) -> dict:
