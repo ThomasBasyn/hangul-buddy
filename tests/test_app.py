@@ -166,37 +166,29 @@ def test_token(tmp_path, monkeypatch):
         assert c.get("/").status_code == 200  # web-app zelf is publiek, de API niet
 
 
-def test_azure_assess_uses_separate_transcript(monkeypatch):
-    """'Gehoord' komt uit een gewone herkenning, niet uit de referentietekst."""
+def test_azure_assess_is_one_call_without_transcript(monkeypatch):
+    """Eén Azure-aanroep per opname; 'Gehoord' is leeg want de referentietekst is geen transcript."""
     import asyncio
 
     import httpx
 
     import azure_speech
 
+    calls = []
+
     def handler(request):
-        if "pronunciation-assessment" in request.headers:
-            return httpx.Response(200, json={
-                "RecognitionStatus": "Success",
-                "NBest": [{"Display": "안녕히 계세요.", "PronScore": 8, "AccuracyScore": 8,
-                           "Words": [{"Word": "안녕히", "AccuracyScore": 8, "ErrorType": "Mispronunciation"}]}],
-            })
-        return httpx.Response(200, json={"RecognitionStatus": "Success", "DisplayText": "고마워요."})
+        calls.append(request.url.path)
+        return httpx.Response(200, json={
+            "RecognitionStatus": "Success",
+            "NBest": [{"Display": "안녕히 계세요.", "PronScore": 8, "AccuracyScore": 8,
+                       "Words": [{"Word": "안녕히", "AccuracyScore": 8, "ErrorType": "Mispronunciation"}]}],
+        })
 
     real_client = httpx.AsyncClient
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(handler)))
     result = asyncio.run(azure_speech.assess(b"wav", "안녕히 계세요"))
-    assert result["heard"] == "고마워요."
-    assert result["score"] == 8
-
-    def failing(request):
-        if "pronunciation-assessment" in request.headers:
-            return handler(request)
-        return httpx.Response(500)
-
-    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: real_client(transport=httpx.MockTransport(failing)))
-    result = asyncio.run(azure_speech.assess(b"wav", "안녕히 계세요"))
-    assert result["heard"] == ""  # liever niets dan de referentietekst als "gehoord"
+    assert len(calls) == 1
+    assert result["heard"] == "" and result["score"] == 8
 
 
 def test_config_has_auto_grading_thresholds(client):
@@ -699,7 +691,7 @@ def test_speaking_time_per_month_and_admin_view(multi, monkeypatch):
     alle = owner["all"]
     assert alle["seconds"] == 7 and alle["attempts"] == 3
     assert {u["name"]: u["seconds"] for u in alle["users"]} == {"Baas": 2, "Mama": 5}
-    assert alle["shared_seconds"] == 7 and alle["azure_estimate"] == 14
+    assert alle["shared_seconds"] == 7 and alle["azure_estimate"] == 7
     assert alle["users"][0]["name"] == "Mama"  # meeste tijd bovenaan
 
     # een andere maand is leeg, een ongeldige maand wordt geweigerd

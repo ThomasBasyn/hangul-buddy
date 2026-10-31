@@ -107,24 +107,6 @@ async def _score(client: httpx.AsyncClient, wav: bytes, reference: str, key: str
     return parse_assessment(r.json())
 
 
-async def _transcribe(client: httpx.AsyncClient, wav: bytes, key: str, region: str, locale: str = LANG) -> str:
-    """Gewone spraakherkenning zonder referentietekst: wat Azure echt hoorde."""
-    r = await _post(
-        client, f"https://{region}.stt.speech.microsoft.com/speech/recognition/{STT_URL}", key,
-        params={"language": locale, "format": "simple"},
-        headers={
-            "Ocp-Apim-Subscription-Key": key,
-            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
-            "Accept": "application/json",
-        },
-        content=wav,
-    )
-    data = r.json()
-    if data.get("RecognitionStatus") != "Success":
-        return ""
-    return data.get("DisplayText", "")
-
-
 async def verify(key: str, region: str) -> None:
     """Controleer of een sleutel en regio samen werken (vraagt een tijdelijk toegangstoken aan)."""
     async with httpx.AsyncClient(timeout=15) as client:
@@ -139,16 +121,10 @@ async def assess(wav: bytes, reference: str, key: str | None = None, region: str
                  locale: str | None = None) -> dict:
     """Uitspraakbeoordeling. Verwacht 16 kHz, 16-bit, mono WAV."""
     key, region, locale = key or KEY, region or REGION, locale or LANG
+    # Eén aanroep per opname: een tweede (voor "Gehoord") zou de Azure-minuten verdubbelen.
     async with httpx.AsyncClient(timeout=30) as client:
-        scored, heard = await asyncio.gather(
-            _score(client, wav, reference, key, region, locale),
-            _transcribe(client, wav, key, region, locale),
-            return_exceptions=True,
-        )
-    if isinstance(scored, BaseException):
-        raise scored
-    # De "heard" uit de beoordeling is de referentietekst, dus niet bruikbaar als transcript.
-    scored["heard"] = "" if isinstance(heard, BaseException) else heard
+        scored = await _score(client, wav, reference, key, region, locale)
+    scored["heard"] = ""  # de tekst in de beoordeling is de referentietekst, geen transcript
     return scored
 
 

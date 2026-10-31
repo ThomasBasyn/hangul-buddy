@@ -865,7 +865,6 @@ class AzureKeyIn(BaseModel):
 
 
 AZURE_FREE_SECONDS = 5 * 3600     # gratis laag (F0): 5 uur spraak per maand
-AZURE_BILLING_FACTOR = 2          # elke opname gaat twee keer naar Azure (score + tekst), dus telt ongeveer dubbel
 MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
 
@@ -899,7 +898,7 @@ def usage(month: str = "", user: dict = Depends(current_user)):
             months = [{"month": r["month"], "seconds": round(r["s"])} for r in con.execute(
                 "SELECT month, SUM(seconds) s FROM speech_log GROUP BY month ORDER BY month DESC LIMIT 12")]
             out["all"] = {"seconds": round(tot["s"]), "attempts": tot["n"], "shared_seconds": round(tot["shared"]),
-                          "azure_estimate": round(tot["shared"] * AZURE_BILLING_FACTOR), "azure_limit": AZURE_FREE_SECONDS,
+                          "azure_estimate": round(tot["shared"]), "azure_limit": AZURE_FREE_SECONDS,
                           "users": users, "history": months}
     return out
 
