@@ -164,6 +164,7 @@
     });
     document.querySelector(".device .buttons").hidden = t;
     $("type-form").hidden = !t;
+    document.body.dataset.mode = t ? "type" : "speak";
   }
 
   function prepareTyping(item, kind) {
@@ -798,6 +799,7 @@
       t.setAttribute("aria-selected", on);
     });
     $("btn-settings").setAttribute("aria-pressed", view === "settings");
+    document.body.dataset.view = view;
     $("view-practice").hidden = view !== "practice";
     $("view-lessons").hidden = view !== "lessons";
     $("view-settings").hidden = view !== "settings";

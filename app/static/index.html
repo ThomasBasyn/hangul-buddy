@@ -16,7 +16,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a2d35'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23e9fbe9' font-family='sans-serif'%3E%ED%95%9C%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-view="practice" data-mode="speak">
 <header class="top">
   <div class="top-in">
     <div class="brand"><span class="logo" aria-hidden="true">한</span><span class="brand-name">Hangul Buddy</span></div>
@@ -38,16 +38,16 @@
 
 <main>
   <div class="lang-bar" id="lang-bar">
-    <label for="lang-select">Ik leer</label>
+    <label for="lang-select" class="lang-label">Ik leer</label>
     <select id="lang-select" aria-label="Taal die je leert"></select>
-  </div>
-
-  <!-- ============ OEFENEN ============ -->
-  <section id="view-practice" class="view">
     <div class="mode-seg seg" id="mode-bar" role="group" aria-label="Oefenwijze">
       <button type="button" class="mode-btn active" data-mode="speak" aria-pressed="true">🎙️ Spreken</button>
       <button type="button" class="mode-btn" data-mode="type" aria-pressed="false">⌨️ Typen</button>
     </div>
+  </div>
+
+  <!-- ============ OEFENEN ============ -->
+  <section id="view-practice" class="view">
     <div class="xp" aria-live="polite">
       <span class="xp-level" id="xp-level">Lv 1</span>
       <div class="xp-track" role="progressbar" aria-label="Voortgang naar volgend level"><i id="xp-fill"></i></div>

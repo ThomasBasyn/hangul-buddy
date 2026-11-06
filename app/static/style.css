@@ -376,3 +376,60 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 600; paddi
 .word .w.cur { background: rgba(110, 231, 160, .18); box-shadow: 0 2px 0 #6ee7a0; }
 .word .w.ok { color: #6ee7a0; } .word .w.mid { color: #ffd166; } .word .w.bad { color: #ff8a8a; }
 .wgrp { display: inline-block; white-space: nowrap; margin: 0 6px; }
+
+/* ---------- compacte telefoon-layout ---------- */
+.lang-bar .mode-seg { flex: 1; width: auto; margin: 0; min-width: 0; }
+body:not([data-view="practice"]) .lang-bar .mode-seg { display: none; }
+body[data-mode="type"] .auto-switch { display: none; }
+.mode-btn { white-space: nowrap; }
+.type-row input::placeholder { color: var(--muted); opacity: .8; }
+
+@media (max-width: 640px) {
+  :root { --gutter: 14px; --nav-h: 58px; }
+  .top-in { padding: 8px var(--gutter) 6px; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; font-size: 16px; }
+  .brand { font-size: 17px; }
+  .icon-btn { width: 42px; height: 42px; }
+  main { padding-top: 4px; }
+
+  /* taalkeuze en oefenwijze op één regel */
+  .lang-bar { gap: 8px; margin-bottom: 10px; }
+  .lang-label { display: none; }
+  .lang-bar select { max-width: 48%; padding: 6px 10px; border-radius: 12px; font-weight: 600; }
+  .mode-btn { padding: 6px 6px; font-size: 14px; min-height: 38px; }
+
+  /* voortgang als één rustige strook */
+  .xp { margin-bottom: 4px; gap: 8px; font-size: 13px; }
+  .xp-lang { display: none; }
+  .xp-level { padding: 0 9px; }
+  .xp-text { min-width: 0; }
+  .statusbar { font-size: 13px; margin: 0 0 8px; padding: 0 2px; }
+
+  /* schakelaar rechts, uitleg weg */
+  .auto-switch { flex-direction: row-reverse; justify-content: space-between; margin: 0 0 10px; min-height: 36px; gap: 10px; padding: 0 2px; }
+  .auto-text strong { font-weight: 600; font-size: 15px; }
+  .auto-text small { display: none; }
+
+  /* het toestel */
+  .device { padding: 10px 10px 14px; border-radius: 24px; }
+  .screen { min-height: 150px; padding: 10px 14px 12px; border-radius: 14px; }
+  .word { font-size: clamp(30px, 9.5vw, 42px); padding: 12px 0 8px; }
+  .word.long { font-size: clamp(22px, 6.4vw, 30px); }
+  .reveal { padding-top: 8px; }
+  .nl { font-size: 18px; }
+  .score { font-size: 26px; }
+  .buttons { gap: 10px; margin-top: 12px; }
+  .hw { max-width: 84px; max-height: 84px; box-shadow: 0 5px 0 #15171c, 0 7px 12px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.15); }
+  .hw-icon { font-size: 24px; }
+  .hw-label { font-size: 11px; }
+
+  /* typen */
+  .type-form { margin-top: 12px; }
+  .type-row input { font-size: 18px; min-height: 50px; border-radius: 14px; }
+  .type-row .primary { min-height: 50px; border-radius: 14px; padding: 0 16px; }
+  .type-form .practice-row { margin-top: 8px; gap: 8px; }
+  .type-form .ghost.sm { flex: 1; min-height: 42px; border-radius: 12px; font-size: 14px; padding: 6px 8px; }
+
+  .grades { margin-top: 12px; }
+  .note-card, .done, .lesson, .card { margin-top: 12px; border-radius: 16px; }
+}
