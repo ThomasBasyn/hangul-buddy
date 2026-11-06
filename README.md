@@ -13,17 +13,19 @@ The web app and the future device talk to the **same API**, so the hardware only
 
 ## Features
 
-- **Five languages**: Korean, German, Italian, Japanese and Mandarin Chinese, each with its own 10-lesson beginner course, explained in Dutch. Every user can learn several languages, with separate progress and XP per language (switch with the *Ik leer* dropdown). Pronunciation scoring and text-to-speech use the language's Azure locale and voice.
-- **Course structure**: 10 progressive beginner lessons (greetings → introductions → numbers → family → food → places → verbs → time → useful phrases), each with a short grammar note. A lesson unlocks when every word of the previous one has been answered correctly once.
+- **Five languages**: Korean, German, Italian, Japanese and Mandarin Chinese, each with its own beginner course (Korean 18 lessons, the others 10), explained in Dutch. Every user can learn several languages, with separate progress and XP per language (switch with the *Ik leer* dropdown). Pronunciation scoring and text-to-speech use the language's Azure locale and voice.
+- **Course structure**: progressive beginner lessons (greetings → introductions → numbers → family → food → places → verbs → time → useful phrases; Korean continues with sentence structure, formal speech, past tense, negation and questions), each with a short grammar note. A lesson unlocks when every word of the previous one has been answered correctly once.
 - **Spaced repetition (SM-2)**: correct answers come back after 1 day, 3 days, then increasingly longer intervals; mistakes return the same day.
 - **Pronunciation scoring** with [Azure Speech pronunciation assessment](https://learn.microsoft.com/azure/ai-services/speech-service/how-to-pronunciation-assessment) (overall and per-word scores; Azure only offers per-syllable scores for en-US), with a fallback to browser speech recognition plus a jamo-level (ㄱ ㅏ ㅁ …) similarity score.
 - **Smart recording**: the recording stops by itself shortly after you finish speaking and trims the silence before and after, which also saves Azure audio time. It can be switched off in Settings (per device), and you can always tap Stop yourself.
+- **Sentences word by word**: for multi-word items (Korean, German, Italian) you speak each word separately, the sentence gets the average score. Long sentences are scored much more strictly than single words, so this keeps scores fair. Can be switched off in Settings; whole sentences then get a longer pause tolerance.
+- **Typing practice**: a *Spreken / Typen* switch on the practice screen. Reviews show the Dutch meaning and you type the word (new words are typed over). Case, spaces and punctuation are ignored; a small typo or a missing accent counts as *Hard*. For Japanese and Chinese romaji/pinyin is accepted as well. Needs a keyboard for the language you learn.
 - **Text-to-speech** with Azure neural voices (cached on disk, MP3 for the web, 16 kHz WAV for the ESP32), falling back to the browser's voice.
 - **Auto-grading switch**: with a score of 90% or more the word counts as *Easy* and you move on; between 80% and 90% nothing is saved and you try again; below 80% it is marked *Hard* straight away and you stay on the word until you reach 90%. Thresholds are in `/api/config`.
 - **Lesson word lists and practice**: every unlocked lesson lists its words with a play button, and a *Practice* mode lets you drill the words you have already seen (it does not affect your review schedule, and with auto-grading on it moves to the next word at 90%).
 - **XP, levels and leaderboard**: every review earns XP (Easy 10, Hard 8, new word +5, pronunciation of 90% or more +5; per word per day only your best attempt counts). Levels need 100, 300, 600 … XP. A weekly (Monday to Sunday) and an all-time leaderboard show everyone's XP, level and streak, as a total over all languages or per language.
 - **Multiple users**: every user has a username and password and their own progress. Users can store their own Azure Speech key in the *Instellingen* tab (checked, then stored encrypted); without one they fall back to the owner's key from `.env`.
-- Streaks, daily limits, lesson overview, keyboard shortcuts, dark mode.
+- Monthly speaking time per user in Settings (admin sees everyone), streaks, daily limits, lesson overview, keyboard shortcuts, dark mode.
 
 ## Architecture
 

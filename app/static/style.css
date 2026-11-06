@@ -356,3 +356,23 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 600; paddi
 .board-row.empty { display: block; text-align: center; color: var(--muted); }
 .word[lang="ja"], .word[lang="zh"] { font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif; }
 .sub { color: var(--screen-dim); font-size: 12px; margin-top: 2px; }
+
+/* ---------- oefenwijze, typen, zin per woord ---------- */
+.mode-seg { display: flex; width: 100%; margin-bottom: 12px; }
+.mode-btn { flex: 1; border: 0; background: none; color: var(--muted); padding: 6px 14px; min-height: 40px; border-radius: 9px; font-weight: 600; }
+.mode-btn.active { background: var(--case); color: #fff; }
+.type-form { margin-top: 16px; }
+.type-row { display: flex; gap: 8px; }
+.type-row input {
+  flex: 1; min-width: 0; padding: 10px 14px; min-height: 48px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--surface); color: var(--text); font-size: 20px;
+}
+.type-row input.ok { border-color: var(--good); } .type-row input.mid { border-color: var(--hard); } .type-row input.bad { border-color: var(--again); }
+.type-form .practice-row { margin-top: 8px; }
+.ghost.sm { padding: 6px 12px; min-height: 40px; font-size: 14px; }
+.words { display: inline; }
+.word .w { padding: 0 .12em; border-radius: 6px; transition: color .2s, background .2s; }
+.word .w.todo { opacity: .45; }
+.word .w.cur { background: rgba(110, 231, 160, .18); box-shadow: 0 2px 0 #6ee7a0; }
+.word .w.ok { color: #6ee7a0; } .word .w.mid { color: #ffd166; } .word .w.bad { color: #ff8a8a; }
+.wgrp { display: inline-block; white-space: nowrap; margin: 0 6px; }

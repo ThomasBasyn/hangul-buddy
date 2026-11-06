@@ -19,7 +19,12 @@
   const autoOn = () => store.get("hb_auto") === "1";
   const manualGrading = () => !state.practice && !autoOn();
   // Slim opnemen: stopt vanzelf kort na je laatste woord en knipt stilte weg (bespaart ook Azure-tijd)
-  const VAD = { minRms: 0.012, startChunks: 2, silenceMs: 800, noSpeechMs: 4500, maxMs: 8000, preChunks: 4, postChunks: 4 };
+  const VAD = { minRms: 0.012, startChunks: 2, silenceMs: 800, noSpeechMs: 4500, maxMs: 8000, preChunks: 4, postChunks: 4,
+    sentenceSilenceMs: 1500, sentenceMaxMs: 12000, wordNoSpeechMs: 6000, wordMaxMs: 4500 };
+  const wordwiseOn = () => store.get("hb_wordwise") !== "0";
+  const typing = () => store.get("hb_mode") === "type";
+  const isSentence = (it) => (it?.words?.length || 0) > 1 || (["ja", "zh"].includes(it?.lang) && (it.text || "").length > 6);
+  const gradeFor = (s) => (s >= 90 ? 5 : s >= 75 ? 4 : s >= 60 ? 3 : s >= 40 ? 2 : 1); // zelfde grenzen als de server
   const vadOn = () => store.get("hb_vad") !== "0";
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const shuffle = (a) => {
@@ -145,7 +150,121 @@
     $("nl").textContent = item.nl;
     $("tip").textContent = item.tip ? `💡 ${item.tip}` : "";
     $("tip").hidden = !item.tip;
+    prepareTyping(item, badgeClass);
   }
+
+  // ------------------------------------------------------------ typen
+  // Herhalingen: je ziet het Nederlands en typt het woord. Nieuwe woorden: je typt ze over.
+  function applyMode() {
+    const t = typing();
+    document.querySelectorAll(".mode-btn").forEach((b) => {
+      const on = (b.dataset.mode === "type") === t;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on);
+    });
+    document.querySelector(".device .buttons").hidden = t;
+    $("type-form").hidden = !t;
+  }
+
+  function prepareTyping(item, kind) {
+    applyMode();
+    state.typing = null;
+    if (!typing()) return;
+    const copy = kind === "new";
+    state.typing = { item, copy, hint: false, done: false, advanced: false };
+    if (!copy) {
+      const word = $("word");
+      word.textContent = item.nl;
+      word.lang = "nl";
+      word.classList.toggle("long", item.nl.length > 14);
+    }
+    $("reveal").hidden = !copy;
+    const inp = $("type-input");
+    inp.value = "";
+    inp.readOnly = false;
+    inp.className = "";
+    inp.lang = item.lang || "ko";
+    inp.placeholder = copy ? "Typ het woord over" : `Typ het in het ${langName(item.lang || "ko").toLowerCase()}`;
+    $("type-go").textContent = "Controleer";
+    $("type-hint").hidden = copy;
+    $("type-skip").hidden = copy;
+    if (!$("view-practice").hidden && matchMedia("(hover: hover)").matches) inp.focus({ preventScroll: true });
+  }
+
+  async function judgeTyped(typed, skipped = false) {
+    const t = state.typing, card = state.card;
+    if (!t || !card || state.busy || t.done) return;
+    state.busy = true;
+    let r;
+    try {
+      if (skipped) r = { verdict: "wrong", score: 0, expected: t.item.text };
+      else {
+        const res = await api(`/api/typing/${encodeURIComponent(t.item.id)}`, { method: "POST", json: { typed } });
+        if (!res.ok) throw new Error(res.status);
+        r = await res.json();
+      }
+    } catch (e) {
+      state.busy = false;
+      return toast(`Controleren mislukt (${e.message}).`);
+    }
+    state.busy = false;
+    if (state.card !== card || state.typing !== t) return;
+    t.done = true;
+    const g = r.verdict === "exact" ? (t.hint || t.copy ? 4 : 5) : r.verdict === "close" ? 3 : 1;
+    const inp = $("type-input");
+    inp.readOnly = true;
+    inp.className = { exact: "ok", close: "mid", wrong: "bad" }[r.verdict];
+    const word = $("word");
+    word.textContent = r.expected;
+    word.lang = t.item.lang || "ko";
+    word.classList.toggle("long", r.expected.length > (CJK.has(word.lang) ? 6 : 12));
+    $("reveal").hidden = false;
+    const mine = typed ? `<div class="heard">Jij typte: <b lang="${esc(t.item.lang || "ko")}">${esc(typed)}</b></div>` : "";
+    const msg = {
+      exact: `<div class="score ok">✅ Juist!</div>${t.hint ? '<div class="heard">Met hint, dus Goed in plaats van Makkelijk.</div>' : ""}`,
+      close: `<div class="score mid">Bijna!</div>${mine}<div class="heard">Let op een typfout of een ontbrekend accent.</div>`,
+      wrong: `<div class="score bad">${skipped ? "Het antwoord" : "Niet juist"}</div>${mine}`,
+    }[r.verdict];
+    $("feedback").hidden = false;
+    $("feedback").innerHTML = msg;
+    $("type-hint").hidden = $("type-skip").hidden = true;
+    $("type-go").textContent = "Volgende";
+    $("type-go").focus({ preventScroll: true });
+    if (!state.practice) {
+      try { await saveGrade(g, { score: r.score, provider: "typing" }); }
+      catch (e) { toast(`Opslaan mislukt (${e.message}).`); }
+    }
+    if (r.verdict === "exact") {
+      await sleep(1300);
+      if (state.typing === t && state.card === card && !t.advanced) typingNext();
+    }
+  }
+
+  function typingNext() {
+    const t = state.typing;
+    if (!t || !t.done || t.advanced || state.busy) return;
+    t.advanced = true;
+    if (state.practice) nextPractice();
+    else loadNext();
+  }
+
+  $("type-form").onsubmit = (e) => {
+    e.preventDefault();
+    const t = state.typing;
+    if (!t) return;
+    if (t.done) return typingNext();
+    const typed = $("type-input").value.trim();
+    if (typed) judgeTyped(typed);
+  };
+  $("type-hint").onclick = () => { if (state.typing) { state.typing.hint = true; listen(); } };
+  $("type-skip").onclick = () => judgeTyped("", true);
+  document.querySelectorAll(".mode-btn").forEach((b) => {
+    b.onclick = () => {
+      store.set("hb_mode", b.dataset.mode);
+      applyMode();
+      if (state.practice) showPracticeCard(); else loadNext();
+    };
+  });
 
   function resetCard() {
     state.card = null;
@@ -177,7 +296,7 @@
     if (!state.card) return;
     state.revealed = true;
     $("reveal").hidden = false;
-    $("grades").hidden = !manualGrading();
+    $("grades").hidden = !manualGrading() || typing();
   }
 
   // ------------------------------------------------------------ luisteren
@@ -231,14 +350,90 @@
   async function speak() {
     if (!state.card || state.busy) return;
     if (state.recording) return state.recording.stop();
-    if (state.config?.azure) return recordAzure();
+    if (state.config?.azure) return speakAzure();
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SR) return recognizeBrowser(SR);
     toast("Spraakcheck werkt niet in deze browser. Gebruik Chrome, of stel Azure in. Beoordeel jezelf intussen.");
     reveal();
   }
 
-  async function recordAzure() {
+  const postWav = (id, wav, word) => api(`/api/assess/${encodeURIComponent(id)}${word == null ? "" : `?word=${word}`}`, {
+    method: "POST", body: wav, headers: { "Content-Type": "audio/wav" },
+  });
+
+  async function speakAzure() {
+    const item = state.card.item;
+    if (wordwiseOn() && item.words?.length > 1) return speakWords();
+    if (state.card.wordResults) { state.card.wordResults = null; $("word").textContent = item.text; } // oude woordkleuren weg
+    // Hele zinnen krijgen meer ruimte voor pauzes, anders stopt de opname midden in je zin
+    const wav = await recordClip(isSentence(item) ? { silenceMs: VAD.sentenceSilenceMs, maxMs: VAD.sentenceMaxMs, noSpeechMs: 6000 } : {});
+    if (wav) await sendAssessment(() => postWav(item.id, wav));
+  }
+
+  // Zin woord voor woord: elk woord wordt apart opgenomen en beoordeeld, de zin krijgt het gemiddelde
+  function renderWords(words, results, cur) {
+    const html = words.map((w, i) => {
+      const cls = i === cur ? "cur" : results[i] ? scoreClass(results[i].score) : "todo";
+      return `<span class="w ${cls}">${esc(w)}</span>`;
+    }).join(" ");
+    $("word").innerHTML = `<span class="words">${html}</span>`;
+  }
+
+  async function speakWords() {
+    const card = state.card;
+    const words = card.item.words;
+    if (!card.wordResults || card.wordResults.length >= words.length) card.wordResults = [];
+    const results = card.wordResults;
+    const stillHere = () => state.card === card;
+    while (results.length < words.length && stillHere()) {
+      const i = results.length;
+      renderWords(words, results, i);
+      $("feedback").hidden = false;
+      $("feedback").innerHTML = `<div class="heard">Woord ${i + 1} van ${words.length}: zeg <b lang="${esc(card.item.lang)}">${esc(words[i])}</b></div>`;
+      const wav = await recordClip({ noSpeechMs: VAD.wordNoSpeechMs, maxMs: VAD.wordMaxMs });
+      if (!stillHere()) return;
+      if (!wav) {
+        $("feedback").innerHTML = `<div class="heard">Tik op Spreek om verder te gaan bij <b lang="${esc(card.item.lang)}">${esc(words[i])}</b>.</div>`;
+        return;
+      }
+      state.busy = true;
+      let r = null;
+      try {
+        const res = await postWav(card.item.id, wav, i);
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.status);
+        r = await res.json();
+      } catch (e) {
+        $("feedback").innerHTML = `<div class="heard">Beoordelen mislukt: ${esc(e.message)}. Tik op Spreek om het woord opnieuw te proberen.</div>`;
+      } finally {
+        state.busy = false;
+      }
+      if (!r) return;
+      results.push(r);
+    }
+    if (!stillHere() || results.length < words.length) return;
+    renderWords(words, results, -1);
+    const avg = (key) => {
+      const v = results.map((r) => r[key]).filter((x) => typeof x === "number");
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : undefined;
+    };
+    const score = avg("score");
+    const agg = {
+      score, grade: gradeFor(score), provider: "azure", heard: "",
+      accuracy: avg("accuracy"), completeness: avg("completeness"),
+      words: results.map((r, i) => ({ word: words[i], score: r.score, syllables: r.words?.[0]?.syllables || [] })),
+    };
+    showAssessment(agg);
+    await autoJudge(card, agg);
+  }
+
+  function recordClip(opts = {}) {
+    return new Promise((resolve) => recordInto(opts, resolve));
+  }
+
+  async function recordInto(opts, resolve) {
+    const silenceMs = opts.silenceMs ?? VAD.silenceMs;
+    const noSpeechMs = opts.noSpeechMs ?? VAD.noSpeechMs;
+    const maxMs = opts.maxMs ?? VAD.maxMs;
     let stream;
     const AC = window.AudioContext || window.webkitAudioContext;
     const ctx = new AC(); // binnen de tik aanmaken: Safari houdt hem anders op "suspended"
@@ -246,7 +441,8 @@
       stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
     } catch {
       ctx.close().catch(() => {});
-      return toast("Geen toegang tot je microfoon. De app moet via https of localhost draaien.");
+      toast("Geen toegang tot je microfoon. De app moet via https of localhost draaien.");
+      return resolve(null);
     }
     if (ctx.state === "suspended") { try { await ctx.resume(); } catch { /* opnemen lukt dan niet */ } }
     const src = ctx.createMediaStreamSource(stream);
@@ -270,15 +466,15 @@
         if (first >= 0) last = idx;
       } else {
         above = 0;
-        if (first >= 0 && (silentFor += chunkMs) >= VAD.silenceMs) finish();
+        if (first >= 0 && (silentFor += chunkMs) >= silenceMs) finish();
       }
     };
     src.connect(proc);
     proc.connect(ctx.destination);
     setRecording(true);
 
-    const timers = [setTimeout(() => state.recording?.stop(), VAD.maxMs)];
-    if (vadOn()) timers.push(setTimeout(() => { if (first < 0) finish(); }, VAD.noSpeechMs));
+    const timers = [setTimeout(() => state.recording?.stop(), maxMs)];
+    if (vadOn()) timers.push(setTimeout(() => { if (first < 0) finish(); }, noSpeechMs));
     state.recording = {
       stop: async ({ auto = false } = {}) => {
         timers.forEach(clearTimeout);
@@ -291,11 +487,8 @@
         await ctx.close();
         let use = chunks;
         if (vadOn() && first >= 0) use = chunks.slice(Math.max(0, first - VAD.preChunks), last + 1 + VAD.postChunks);
-        else if (vadOn() && auto) return toast("Ik hoorde niets. Spreek iets luider en probeer opnieuw.");
-        const wav = encodeWav(downsample(concat(use), rate, 16000), 16000);
-        await sendAssessment(() => api(`/api/assess/${encodeURIComponent(state.card.item.id)}`, {
-          method: "POST", body: wav, headers: { "Content-Type": "audio/wav" },
-        }));
+        else if (vadOn() && auto) { toast("Ik hoorde niets. Spreek iets luider en probeer opnieuw."); return resolve(null); }
+        resolve(encodeWav(downsample(concat(use), rate, 16000), 16000));
       },
     };
   }
@@ -411,9 +604,9 @@
     state.assessed = r;
     const s = Math.round(r.score);
     let detail = "";
-    const syl = (r.words || []).flatMap((w) => (w.syllables?.length ? w.syllables : [{ text: w.word, score: w.score }]));
-    if (syl.length) {
-      detail = `<div>${syl.map((x) => `<span class="syl ${scoreClass(x.score)}" title="${Math.round(x.score)}%">${esc(x.text)}</span>`).join(" ")}</div>`;
+    const groups = (r.words || []).map((w) => (w.syllables?.length ? w.syllables : [{ text: w.word, score: w.score }]));
+    if (groups.length) {
+      detail = `<div>${groups.map((g) => `<span class="wgrp">${g.map((x) => `<span class="syl ${scoreClass(x.score)}" title="${Math.round(x.score)}%">${esc(x.text)}</span>`).join(" ")}</span>`).join(" ")}</div>`;
     }
     const parts = [["Uitspraak", r.accuracy], ["Vloeiendheid", r.fluency], ["Volledigheid", r.completeness]]
       .filter(([, v]) => typeof v === "number").map(([k, v]) => `${k} ${Math.round(v)}`);
@@ -564,8 +757,8 @@
     fillCard(item, p.lesson, "Oefenen", "practice");
     $("practice-progress").textContent = `Woord ${p.idx + 1} van ${p.items.length} · telt niet mee voor je herhalingen`;
     $("practice-bar").hidden = false;
-    reveal();
-    if (state.interacted) listen();
+    if (!typing()) reveal();
+    if (state.interacted && !typing()) listen();
   }
 
   function nextPractice() {
@@ -798,6 +991,7 @@
     $("set-logout").hidden = !store.get("hb_token");
     $("pw-msg").hidden = true;
     $("set-vad").checked = vadOn();
+    $("set-wordwise").checked = wordwiseOn();
     try { showSettings(await getJSON("/api/settings")); } catch { setMsg("Instellingen laden mislukt.", true); }
   }
 
@@ -806,6 +1000,7 @@
   }
 
   $("set-vad").onchange = () => store.set("hb_vad", $("set-vad").checked ? "1" : "0");
+  $("set-wordwise").onchange = () => store.set("hb_wordwise", $("set-wordwise").checked ? "1" : "0");
 
   $("set-form").onsubmit = async (e) => {
     e.preventDefault();
@@ -878,7 +1073,7 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.target.closest("input, dialog") || e.metaKey || e.ctrlKey || e.altKey) return;
-    if ($("view-practice").hidden) return;
+    if ($("view-practice").hidden || typing()) return;
     if (e.key === " ") { e.preventDefault(); listen(); }
     else if (e.key === "r" || e.key === "R") speak();
     else if (e.key === "Enter") { e.preventDefault(); reveal(); }
@@ -895,6 +1090,7 @@
     try { state.config = await getJSON("/api/config"); } catch { state.config = { azure: false }; }
     initAuto();
     initLanguages();
+    applyMode();
     await loadNext();
   })();
 })();

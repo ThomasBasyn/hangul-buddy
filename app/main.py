@@ -28,7 +28,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import azure_speech
-from srs import Card, review, score_to_grade, similarity
+from srs import Card, check_typed, review, score_to_grade, similarity, split_words
 
 # ---------------------------------------------------------------- config
 BASE = Path(__file__).parent
@@ -474,7 +474,10 @@ app = FastAPI(title="Hangul Buddy", lifespan=lifespan, docs_url="/api/docs", red
 
 
 def item_out(item: dict) -> dict:
-    return {k: item.get(k) for k in ("id", "text", "ko", "rom", "nl", "tip", "lesson", "lang")}
+    out = {k: item.get(k) for k in ("id", "text", "ko", "rom", "nl", "tip", "lesson", "lang")}
+    words = split_words(item["text"]) if item.get("lang") not in ("ja", "zh") else []
+    out["words"] = words if len(words) > 1 else []  # alleen zinnen: die kun je woord voor woord inspreken
+    return out
 
 
 def lesson_out(les: dict) -> dict:
@@ -616,18 +619,26 @@ def check_wav(data: bytes) -> None:
 
 
 @app.post("/api/assess/{item_id}")
-async def assess_audio(item_id: str, request: Request, user: dict = Depends(current_user)):
-    """Uitspraak beoordelen met Azure. Body: ruwe WAV (16 kHz, mono, 16-bit)."""
+async def assess_audio(item_id: str, request: Request, word: int | None = None,
+                       user: dict = Depends(current_user)):
+    """Uitspraak beoordelen met Azure. Body: ruwe WAV (16 kHz, mono, 16-bit).
+    Met ?word=N beoordeel je alleen het N-de woord (vanaf 0) van een zin."""
     item = ITEMS.get(item_id)
     if not item:
         raise HTTPException(404, "onbekend item")
+    reference = item["text"]
+    if word is not None:
+        parts = split_words(reference)
+        if len(parts) < 2 or not 0 <= word < len(parts):
+            raise HTTPException(400, "ongeldig woordnummer")
+        reference = parts[word]
     creds = azure_creds(user)
     if not creds:
         raise HTTPException(503, "Azure Speech is niet ingesteld")
     data = await request.body()
     check_wav(data)
     try:
-        result = await azure_speech.assess(data, item["text"], key=creds[0], region=creds[1],
+        result = await azure_speech.assess(data, reference, key=creds[0], region=creds[1],
                                            locale=COURSES[item["lang"]]["locale"])
     except httpx.HTTPError as exc:
         log.error("Azure-beoordeling mislukt voor %s (%s): %s", user["name"], creds[2], exc)
@@ -661,6 +672,20 @@ def assess_text(item_id: str, body: HeardIn, user: dict = Depends(current_user))
     score = similarity(item["text"], body.heard, item["lang"])
     return {"score": score, "heard": body.heard, "words": [], "grade": score_to_grade(score),
             "provider": "speech-recognition"}
+
+
+class TypedIn(BaseModel):
+    typed: str = Field(max_length=300)
+
+
+@app.post("/api/typing/{item_id}")
+def typing_check(item_id: str, body: TypedIn, user: dict = Depends(current_user)):
+    """Typoefening: controleer wat je getypt hebt. De uitslag (exact, close, wrong) zet de app om in een beoordeling."""
+    item = ITEMS.get(item_id)
+    if not item:
+        raise HTTPException(404, "onbekend item")
+    result = check_typed(item["text"], body.typed, item["lang"], item.get("rom", ""))
+    return {**result, "expected": item["text"]}
 
 
 @app.get("/api/tts/{item_id}")

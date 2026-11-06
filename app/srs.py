@@ -1,5 +1,6 @@
 """Spaced repetition (SM-2 variant) en uitspraakscore -> beoordeling."""
 
+import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -95,3 +96,33 @@ def similarity(expected: str, heard: str, lang: str = "ko") -> float:
     if not a or not b:
         return 0.0
     return round(max(0.0, 1 - _levenshtein(a, b) / max(len(a), len(b))) * 100, 1)
+
+
+# ------------------------------------------------------------- woorden en typcontrole
+_PUNCT = re.compile(r"[?!.,;:¿¡…。、！？，]+")
+
+
+def split_words(text: str) -> list[str]:
+    """Woorden van een zin zonder leestekens (voor woord-voor-woord inspreken)."""
+    return [w for w in (_PUNCT.sub("", part) for part in text.split()) if w]
+
+
+def _compact(text: str) -> str:
+    """Hoofdletters, spaties en leestekens negeren; accenten en klanken blijven wel verschillen."""
+    text = unicodedata.normalize("NFC", text).casefold()
+    return "".join(ch for ch in text if ch.isalnum())
+
+
+def check_typed(expected: str, typed: str, lang: str = "ko", rom: str = "") -> dict:
+    """Controleert getypte tekst. verdict: exact (goed), close (bijna: typfout of ontbrekend accent) of wrong.
+    Voor Japans en Chinees mag je ook romaji of pinyin typen (zonder toonmarkeringen)."""
+    exp = _compact(expected)
+    got = _compact(typed)
+    if not got:
+        return {"verdict": "wrong", "score": 0.0}
+    if got == exp:
+        return {"verdict": "exact", "score": 100.0}
+    if lang in ("ja", "zh") and rom and letters(typed) == letters(rom):
+        return {"verdict": "exact", "score": 100.0}
+    score = min(99.0, similarity(expected, typed, lang))
+    return {"verdict": "close" if score >= 80 else "wrong", "score": score}

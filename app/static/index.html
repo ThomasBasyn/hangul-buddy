@@ -44,6 +44,10 @@
 
   <!-- ============ OEFENEN ============ -->
   <section id="view-practice" class="view">
+    <div class="mode-seg seg" id="mode-bar" role="group" aria-label="Oefenwijze">
+      <button type="button" class="mode-btn active" data-mode="speak" aria-pressed="true">🎙️ Spreken</button>
+      <button type="button" class="mode-btn" data-mode="type" aria-pressed="false">⌨️ Typen</button>
+    </div>
     <div class="xp" aria-live="polite">
       <span class="xp-level" id="xp-level">Lv 1</span>
       <div class="xp-track" role="progressbar" aria-label="Voortgang naar volgend level"><i id="xp-fill"></i></div>
@@ -90,6 +94,17 @@
         </button>
       </div>
     </div>
+
+    <form class="type-form" id="type-form" hidden autocomplete="off">
+      <div class="type-row">
+        <input id="type-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Typ het antwoord" placeholder="Typ het antwoord">
+        <button type="submit" class="primary" id="type-go">Controleer</button>
+      </div>
+      <div class="practice-row start">
+        <button type="button" class="ghost sm" id="type-hint">🔊 Hint: luister</button>
+        <button type="button" class="ghost sm" id="type-skip">Ik weet het niet</button>
+      </div>
+    </form>
 
     <div class="grades" id="grades" hidden>
       <p class="grades-q">Hoe ging het?</p>
@@ -177,6 +192,7 @@
 
     <div class="card">
       <h3>Opnemen</h3>
+      <label class="check"><input type="checkbox" id="set-wordwise"> <span>Zinnen woord voor woord inspreken<small>Je spreekt elk woord van een zin apart in, de zin krijgt het gemiddelde. Handig als hele zinnen te streng beoordeeld worden.</small></span></label>
       <label class="check"><input type="checkbox" id="set-vad"> <span>Opname stopt vanzelf als je uitgesproken bent<small>Aan dit toestel gekoppeld. Je kunt altijd zelf op Stop tikken.</small></span></label>
     </div>
 

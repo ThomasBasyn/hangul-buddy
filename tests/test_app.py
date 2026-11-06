@@ -729,3 +729,58 @@ def test_manual_speech_time_backfill(multi):
             main.add_speech_time(*bad)
     with pytest.raises(ValueError):
         main.add_speech_time("Baas", 5, month="2026-13")
+
+
+def test_split_words_and_typed_check():
+    from srs import check_typed, split_words
+    assert split_words("저는 물을 마셔요") == ["저는", "물을", "마셔요"]
+    assert split_words("화장실이 어디예요?") == ["화장실이", "어디예요"]
+    assert split_words("안녕하세요") == ["안녕하세요"]
+    # goed: hoofdletters, spaties en leestekens tellen niet mee
+    assert check_typed("화장실이 어디예요?", "화장실이어디예요")["verdict"] == "exact"
+    assert check_typed("Guten Tag!", "guten tag")["verdict"] == "exact"
+    # bijna: één klank ernaast, of een accent vergeten
+    assert check_typed("김치를 먹어요", "김치를 머거요")["verdict"] == "close"
+    assert check_typed("Das ist für dich", "Das ist fur dich", "de")["verdict"] == "close"
+    # fout of leeg
+    assert check_typed("물", "불")["verdict"] == "wrong"
+    assert check_typed("안녕하세요", "")["verdict"] == "wrong"
+    # Japans/Chinees: ook romaji of pinyin zonder toonmarkeringen
+    assert check_typed("你好", "ni hao", "zh", "nǐ hǎo")["verdict"] == "exact"
+    assert check_typed("こんにちは", "konnichiwa", "ja", "konnichiwa")["verdict"] == "exact"
+    assert check_typed("你好", "ni hao", "zh", "")["verdict"] == "wrong"
+
+
+def test_typing_endpoint_and_sentence_words(multi, monkeypatch):
+    c, main = multi, multi.main
+    sentence = next(i for i in main.COURSES["ko"]["items"].values() if i["text"] == "저는 물을 마셔요")
+    single = main.COURSES["ko"]["items"]["1-1"]
+    assert main.item_out(sentence)["words"] == ["저는", "물을", "마셔요"]
+    assert main.item_out(single)["words"] == []
+    assert main.item_out(main.COURSES["zh"]["items"]["zh:1-1"])["words"] == []  # geen spaties: niet woord voor woord
+
+    r = c.post(f"/api/typing/{sentence['id']}", json={"typed": "저는 물을 마셔요"}, headers=c.mama).json()
+    assert r["verdict"] == "exact" and r["score"] == 100 and r["expected"] == "저는 물을 마셔요"
+    assert c.post("/api/typing/1-1", json={"typed": "안녕"}, headers=c.mama).json()["verdict"] == "wrong"
+    assert c.post("/api/typing/nope", json={"typed": "x"}, headers=c.mama).status_code == 404
+    assert c.post("/api/typing/1-1", json={"typed": "x"}).status_code == 401
+
+    seen = []
+
+    async def fake_assess(wav, ref, key=None, region=None, locale=None):
+        seen.append(ref)
+        return {"score": 90.0, "heard": "", "words": [], "status": "Success"}
+
+    monkeypatch.setattr(main.azure_speech, "enabled", lambda: True)
+    monkeypatch.setattr(main.azure_speech, "assess", fake_assess)
+    monkeypatch.setattr(main.azure_speech, "KEY", "gedeelde-sleutel-123456789")
+    monkeypatch.setattr(main.azure_speech, "REGION", "westeurope")
+    for i in range(3):
+        assert c.post(f"/api/assess/{sentence['id']}?word={i}", content=wav_bytes(1.0), headers=c.mama).status_code == 200
+    assert seen == ["저는", "물을", "마셔요"]
+    assert c.post(f"/api/assess/{sentence['id']}?word=3", content=wav_bytes(1.0), headers=c.mama).status_code == 400
+    assert c.post("/api/assess/1-1?word=0", content=wav_bytes(1.0), headers=c.mama).status_code == 400  # geen zin
+    assert c.post(f"/api/assess/{sentence['id']}", content=wav_bytes(1.0), headers=c.mama).status_code == 200
+    assert seen[-1] == "저는 물을 마셔요"  # zonder ?word nog steeds de hele zin
+    # de opnametijd telt per woord mee
+    assert c.get("/api/usage", headers=c.mama).json()["seconds"] == 4
